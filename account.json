@@ -1,0 +1,126 @@
+{
+  "ID": "1234",
+  "type": "EVM Compatible",
+  "DS_type": "ECDSA",
+  "active_flag": true,
+  "CardPubKeyForVerfication": "0x2a3a900590e1AE9BCd6549Fd9F73A8fed50A207c",
+  "Static_Key_1": "",
+  "Static_Key_2": "",
+  "Static_Key_3": "",
+  "networks": [
+    {
+      "network_1 name": "",
+      "network_1 RPC Provider": "",
+      "network_1 Chain ID": "",
+      "support EIP1559": true
+    },
+    {
+      "network_2 name": "",
+      "network_2 RPC Provider": "",
+      "network_2 Chain ID": "",
+      "support EIP1559": false
+    },
+    {
+      "network_imported_1 name": "",
+      "network_imported_1 RPC Provider": "",
+      "network_imported_1 Chain ID": "",
+      "support EIP1559": false
+    }
+  ],
+  "account": [
+    {
+      "pubKey_1": "0x568503313B3987EB039E74b5C1f7F92de0D82C5d",
+      "name": "account1",
+      "network chain id": 1337,
+      "support EIP1559": true,
+      "TokenInfo": {
+        "tokenERC20": [
+          {
+            "ERC20 Address 1": "0x61494EC9dA2cB87B79cE27d04E50E029bf8CB056",
+            "name": "PTIT"
+          }
+        ],
+        "tokenERC721": [
+          {
+            "ERC721 Address 1": "0x61494EC9dA2cB87B79cE27d04E50E029bf8CB056",
+            "name": "PTIT721",
+            "totalBalance": "10",
+            "currentQueryBlock": "2351775",
+            "listID": [
+              {
+                "ID": 1,
+                "tokenURI": "https://abc.xyz",
+                "image": "https://ipfs.io/61494EC9dA2cB87B79cE27d04E50E029bf8CB056",
+                "metadata": "This is a NFT Token, metadata get from ipfs"
+              }
+            ]
+          }
+        ],
+        "tokenERC1155": [
+          {
+            "ERC1155 Address 1": "0x61494EC9dA2cB87B79cE27d04E50E029bf8CB056",
+            "name": "PTIT1155",
+            "totalBalance": "20",
+            "currentQueryBlock": "2351775",
+            "listID": [
+              {
+                "ID": 1,
+                "balance": 5,
+                "tokenURI": "https://abc.xyz",
+                "image": "https://ipfs.io/61494EC9dA2cB87B79cE27d04E50E029bf8CB056",
+                "metadata": "This is a ERC1155 Token, metadata get from ipfs"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "pubKey_2": "0x568503313B3987EB039E74b5C1f7F92de0D82C5d",
+      "name": "account2",
+      "network chain id": 1337,
+      "support EIP1559": true,
+      "TokenInfo": {
+        "tokenERC20": [
+          {
+            "ERC20 Address 1": "0x61494EC9dA2cB87B79cE27d04E50E029bf8CB056",
+            "name": "PTIT"
+          }
+        ],
+        "tokenERC721": [
+          {
+            "ERC721 Address 1": "0x61494EC9dA2cB87B79cE27d04E50E029bf8CB056",
+            "name": "PTIT721",
+            "totalBalance": "10",
+            "currentQueryBlock": "2351775",
+            "listID": [
+              {
+                "ID": 1,
+                "tokenURI": "https://abc.xyz",
+                "image": "https://ipfs.io/61494EC9dA2cB87B79cE27d04E50E029bf8CB056",
+                "metadata": "This is a NFT Token, metadata get from ipfs"
+              }
+            ]
+          }
+        ],
+        "tokenERC1155": [
+          {
+            "ERC1155 Address 1": "0x61494EC9dA2cB87B79cE27d04E50E029bf8CB056",
+            "name": "PTIT1155",
+            "totalBalance": "20",
+            "currentQueryBlock": "2351775",
+            "listID": [
+              {
+                "ID": 1,
+                "balance": 5,
+                "tokenURI": "https://abc.xyz",
+                "image": "https://ipfs.io/61494EC9dA2cB87B79cE27d04E50E029bf8CB056",
+                "metadata": "This is a ERC1155 Token, metadata get from ipfs"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
