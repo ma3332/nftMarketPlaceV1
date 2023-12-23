@@ -56,7 +56,7 @@ nonce = w3.eth.get_transaction_count(my_address)
 
 # 1. Generate a transaction to deploys the contract on the blockchain
 
-marketPlace_proxy = "0xAf4FB3906068dF08451D12606e8753b556Ac1dc4"  # remember this is proxy of market place, not market place
+marketPlace_proxy = "0x2A817AfeFcA226EF50fC85CFE5516BDd87714E2F"  # remember this is proxy of market place, not market place
 
 transaction = nft_contract.constructor(marketPlace_proxy).build_transaction(
     {

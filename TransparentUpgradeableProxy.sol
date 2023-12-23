@@ -2,14 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import {ERC1967Utils} from "./ERC1967Utils.sol";
-import {ERC1967Proxy} from "./ERC1967Proxy.sol";
-import {IERC1967} from "./IERC1967.sol";
-import {ProxyAdmin} from "./ProxyAdmin.sol";
+import "./ERC1967Proxy.sol";
 
 contract TransparentUpgradeableProxy is ERC1967Proxy {
-    address private immutable _admin;
-
     error ProxyDeniedAdminAccess();
 
     event ReceivedEth(uint256 amount);
@@ -19,13 +14,15 @@ contract TransparentUpgradeableProxy is ERC1967Proxy {
         address initialOwner,
         bytes memory _data
     ) payable ERC1967Proxy(_logic, _data) {
-        _admin = address(ProxyAdmin(initialOwner));
-        // Set the storage value and emit an event for ERC-1967 compatibility
-        ERC1967Utils.changeAdmin(_proxyAdmin());
+        assert(
+            _ADMIN_SLOT ==
+                bytes32(uint256(keccak256("eip1967.proxy.admin")) - 1)
+        );
+        _changeAdmin(initialOwner);
     }
 
     modifier ifAdmin() {
-        if (msg.sender == _proxyAdmin()) {
+        if (msg.sender == _getAdmin()) {
             _;
         } else {
             _fallback();
@@ -40,8 +37,12 @@ contract TransparentUpgradeableProxy is ERC1967Proxy {
         fundme();
     }
 
+    function changeAdmin(address newAdmin) external virtual ifAdmin {
+        _changeAdmin(newAdmin);
+    }
+
     function _proxyAdmin() internal view virtual returns (address) {
-        return _admin;
+        return _getAdmin();
     }
 
     function _fallback() internal virtual override {
@@ -53,17 +54,17 @@ contract TransparentUpgradeableProxy is ERC1967Proxy {
             msg.data[4:],
             (address, bytes)
         );
-        ERC1967Utils.upgradeToAndCall(newImplementation, data);
+        _upgradeToAndCall(newImplementation, data);
     }
 
     function upgradeTo(address newImplementation) external ifAdmin {
-        ERC1967Utils.upgradeToAndCall(newImplementation, bytes(""));
+        _upgradeToAndCall(newImplementation, bytes(""));
     }
 
     function upgradeToAndCall(
         address newImplementation,
         bytes calldata data
     ) external payable ifAdmin {
-        ERC1967Utils.upgradeToAndCall(newImplementation, data);
+        _upgradeToAndCall(newImplementation, data);
     }
 }

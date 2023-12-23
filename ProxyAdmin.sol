@@ -2,30 +2,55 @@
 
 pragma solidity ^0.8.0;
 
-import {TransparentUpgradeableProxy} from "./TransparentUpgradeableProxy.sol";
-import {Ownable} from "./Ownable.sol";
+import "./TransparentUpgradeableProxy.sol";
 
-/**
- * @dev This is an auxiliary contract meant to be assigned as the admin of a {TransparentUpgradeableProxy}. For an
- * explanation of why you would want to use this see the documentation for {TransparentUpgradeableProxy}.
- */
-contract ProxyAdmin is Ownable {
+contract ProxyAdmin {
     string public constant UPGRADE_INTERFACE_VERSION = "5.0.0";
+    address private _owner;
 
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    TransparentUpgradeableProxy public proxy;
 
-    function upgradeAndCall(
-        TransparentUpgradeableProxy proxy,
-        address implementation,
-        bytes memory data
-    ) public payable virtual onlyOwner {
-        proxy.upgradeToAndCall{value: msg.value}(implementation, data);
+    constructor() {
+        _owner = msg.sender;
     }
 
-    function upgrade(
-        TransparentUpgradeableProxy proxy,
-        address implementation
-    ) public virtual onlyOwner {
-        proxy.upgradeTo(implementation);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
+
+    modifier onlyOwner() {
+        require(msg.sender == _owner, "Not Allow");
+        _;
+    }
+
+    function owner() public view virtual returns (address) {
+        return _owner;
+    }
+
+    function transferOwnership(address newOwner) public onlyOwner {
+        require(newOwner != address(0), "Not Allow");
+        _transferOwnership(newOwner);
+    }
+
+    function _transferOwnership(address newOwner) internal virtual {
+        address oldOwner = _owner;
+        _owner = newOwner;
+        emit OwnershipTransferred(oldOwner, newOwner);
+    }
+
+    function upgradeToNewVersionAndCall(
+        address _implementation,
+        bytes memory _data
+    ) public payable onlyOwner {
+        proxy.upgradeToAndCall{value: msg.value}(_implementation, _data);
+    }
+
+    function upgradeToNewVersion(address _implementation) public onlyOwner {
+        proxy.upgradeTo(_implementation);
+    }
+
+    function setUpProxy(address payable _proxy) public onlyOwner {
+        proxy = TransparentUpgradeableProxy(_proxy);
     }
 }

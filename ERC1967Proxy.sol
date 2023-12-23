@@ -4,7 +4,7 @@
 pragma solidity ^0.8.0;
 
 import {Proxy} from "./Proxy.sol";
-import {ERC1967Utils} from "./ERC1967Utils.sol";
+import "./ERC1967Upgrade.sol";
 
 /**
  * @dev This contract implements an upgradeable proxy. It is upgradeable because calls are delegated to an
@@ -12,7 +12,7 @@ import {ERC1967Utils} from "./ERC1967Utils.sol";
  * https://eips.ethereum.org/EIPS/eip-1967[ERC-1967], so that it doesn't conflict with the storage layout of the
  * implementation behind the proxy.
  */
-contract ERC1967Proxy is Proxy {
+contract ERC1967Proxy is Proxy, ERC1967Upgrade {
     /**
      * @dev Initializes the upgradeable proxy with an initial implementation specified by `implementation`.
      *
@@ -24,7 +24,11 @@ contract ERC1967Proxy is Proxy {
      * - If `data` is empty, `msg.value` must be zero.
      */
     constructor(address implementation, bytes memory _data) payable {
-        ERC1967Utils.upgradeToAndCall(implementation, _data);
+        assert(
+            _IMPLEMENTATION_SLOT ==
+                bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)
+        );
+        _upgradeToAndCall(implementation, _data);
     }
 
     /**
@@ -41,6 +45,6 @@ contract ERC1967Proxy is Proxy {
         override
         returns (address)
     {
-        return ERC1967Utils.getImplementation();
+        return _getImplementation();
     }
 }

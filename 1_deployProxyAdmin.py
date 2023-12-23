@@ -58,7 +58,7 @@ nonce = w3.eth.get_transaction_count(my_address)
 
 # 1. Generate a transaction to deploys the contract on the blockchain
 
-transaction = proxy_admin_contract.constructor(my_address).build_transaction(
+transaction = proxy_admin_contract.constructor().build_transaction(
     {
         "chainId": chain_id,
         "gasPrice": w3.eth.gas_price,

@@ -63,12 +63,12 @@ nonce = w3.eth.get_transaction_count(my_address)
 
 # 1. Generate a transaction to deploys the contract on the blockchain
 
-NFTMarketPlace = "0xc5941392c6172741b09c8DFCa4437f79B415Dda7"
-ProxyAdminAddress = "0xcBFBCeb4F70663C1b56ADE96d67C37cf3072C7dE"
+ProxyAdminAddress = "0xa50427Dfcf99b50CFDe390D7f151774b65bDD041"
+MarketPlace = "0x1D12483E67271668b7E191eE730491E5dbB8dab3"
 data = "0x"
 
 transaction = transparentUpgradeableProxy_contract.constructor(
-    NFTMarketPlace, ProxyAdminAddress, data
+    MarketPlace, ProxyAdminAddress, data
 ).build_transaction(
     {
         "chainId": chain_id,
