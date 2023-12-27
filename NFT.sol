@@ -17,7 +17,8 @@ contract NFT is ERC721URIStorage, Ownable {
     event TokenMinted(
         uint256 indexed tokenId,
         string tokenURI,
-        address marketplaceProxy
+        address marketplaceProxy,
+        address creators
     );
 
     constructor(
@@ -43,8 +44,27 @@ contract NFT is ERC721URIStorage, Ownable {
         // Give the marketplace approval to transact NFTs between users
         setApprovalForAll(marketplaceProxy, true);
 
-        emit TokenMinted(newItemId, tokenURI, marketplaceProxy);
+        emit TokenMinted(newItemId, tokenURI, marketplaceProxy, msg.sender);
         return newItemId;
+    }
+
+    function mintBatchToken(string[] memory tokenURI) public returns (uint256) {
+        for (uint i = 0; i < tokenURI.length; i++) {
+            _tokenIds.increment();
+            uint256 newItemId = _tokenIds.current();
+            _mint(msg.sender, newItemId);
+            _creators[newItemId] = msg.sender;
+            _setTokenURI(newItemId, tokenURI[i]);
+            emit TokenMinted(
+                newItemId,
+                tokenURI[i],
+                marketplaceProxy,
+                msg.sender
+            );
+        }
+        // Give the marketplace approval to transact NFTs between users
+        setApprovalForAll(marketplaceProxy, true);
+        return _tokenIds.current();
     }
 
     function getTokensOwnedByMe() public view returns (uint256[] memory) {

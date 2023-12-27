@@ -162,6 +162,63 @@ contract Marketplace is ReentrancyGuard {
         return marketItemId;
     }
 
+    function createBatchMarketItem(
+        address nftContractAddress,
+        uint256[] memory tokenId,
+        uint256[] memory price
+    ) public payable nonReentrant returns (uint256) {
+        require(tokenId.length == price.length, "Not correct length");
+        require(
+            msg.value == listingFee * tokenId.length,
+            "Price must be equal to listing price * number of tokenID in a batch"
+        );
+        for (uint i = 0; i < tokenId.length; i++) {
+            _marketItemIds.increment();
+            uint256 marketItemId = _marketItemIds.current();
+
+            address creator = NFT(nftContractAddress).getTokenCreatorById(
+                tokenId[i]
+            );
+
+            require(
+                creator == tx.origin ||
+                    listingPermit[creator][tx.origin] == true,
+                "Not Permit to list on Market"
+            );
+
+            marketItemIdToMarketItem[marketItemId] = MarketItem(
+                marketItemId,
+                nftContractAddress,
+                tokenId[i],
+                payable(creator), // creator
+                payable(tx.origin), // seller
+                payable(address(0)), // owner
+                price[i],
+                false,
+                false
+            );
+
+            IERC721(nftContractAddress).transferFrom(
+                tx.origin,
+                address(this),
+                tokenId[i]
+            );
+
+            emit MarketItemCreated(
+                marketItemId,
+                nftContractAddress,
+                tokenId[i],
+                payable(creator),
+                payable(tx.origin),
+                payable(address(0)),
+                price[i],
+                false,
+                false
+            );
+        }
+        return _marketItemIds.current();
+    }
+
     /**
      * @dev Cancel a market item, only seller can cancel market item (not creator, as some cases seller represent creator to list in market)
      */
