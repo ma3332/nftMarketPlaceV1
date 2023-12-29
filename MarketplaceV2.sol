@@ -3,47 +3,70 @@ pragma solidity ^0.8.0;
 
 import "./ERC721.sol";
 import "./NFT.sol";
+import "./NFT1155.sol";
 import "./ReentrancyGuard.sol";
 import "./Counters.sol";
+import "./ERC1155.sol";
 
 contract MarketplaceV2 is ReentrancyGuard {
     using Counters for Counters.Counter;
 
-    Counters.Counter public _marketItemIds;
-    Counters.Counter public _tokensSold;
-    Counters.Counter public _tokensCanceled;
+    Counters.Counter public _marketNftIds;
+    Counters.Counter public _market1155Ids;
 
     address public _owner;
 
     address payable public _marketOwner;
 
-    uint256 public listingFee = 0.045 ether;
+    uint256 public listingNFTFee = 0.045 ether;
 
-    mapping(uint256 => MarketItem) public marketItemIdToMarketItem;
+    uint256 public listing1155Fee = 0.00045 ether;
+
+    mapping(uint256 => MarketNftItem) public _NftIDtoMarketNftItem;
+
+    mapping(uint256 => Market1155Item) public _1155IDtoMarketNftItem;
 
     mapping(address => mapping(address => bool)) public listingPermit;
 
-    struct MarketItem {
-        uint256 marketItemId;
+    struct MarketNftItem {
+        uint256 marketNftId;
         address nftContractAddress;
         uint256 tokenId;
-        address payable creator;
         address payable seller;
-        address payable owner;
         uint256 price;
         bool sold;
         bool canceled;
     }
 
-    event MarketItemCreated(
-        uint256 indexed marketItemId,
+    struct Market1155Item {
+        uint256 market1155Id;
+        address nftContractAddress;
+        uint256 tokenId;
+        uint256 amount;
+        address payable seller;
+        uint256 price; // price of each amount of tokenID
+        bool soldOut;
+        bool canceled;
+    }
+
+    event NftItemEvent(
+        uint256 indexed marketNftId,
         address indexed nftContract,
-        uint256 indexed tokenId,
-        address creator,
+        uint256 indexed tokenNftId,
         address seller,
-        address owner,
+        address buyer,
         uint256 price,
-        bool sold,
+        bool canceled
+    );
+
+    event ERC1155ItemEvent(
+        uint256 indexed market1155Id,
+        address indexed ERC1155Contract,
+        uint256 indexed token1155Id,
+        uint256 amount,
+        address seller,
+        address buyer,
+        uint256 price,
         bool canceled
     );
 
@@ -57,7 +80,7 @@ contract MarketplaceV2 is ReentrancyGuard {
     }
 
     modifier onlyOwner() {
-        if (tx.origin != _owner) {
+        if (msg.sender != _owner) {
             revert();
         }
         _;
@@ -90,327 +113,371 @@ contract MarketplaceV2 is ReentrancyGuard {
         _owner = address(0x7268bEe5516b3159E2125De548eDfcA42f0C73CB);
     }
 
-    function setUpListingFee(uint256 a) public onlyOwner {
-        listingFee = a;
+    function setUpListingNFTFee(uint256 a) public onlyOwner {
+        listingNFTFee = a;
     }
 
-    function getListingFee() public view returns (uint256) {
-        return listingFee;
+    function getListingNFTFee() public view returns (uint256) {
+        return listingNFTFee;
     }
 
-    // Creators of NFT allow seller to list their arts to marketplace on behalf of them
-    function listingMarketPermission(address _seller) public {
-        listingPermit[tx.origin][_seller] = true;
+    function setUpListing1155Fee(uint256 a) public onlyOwner {
+        listing1155Fee = a;
     }
 
-    function listingMarketRevoke(address _seller) public {
-        listingPermit[tx.origin][_seller] = false;
+    function getListing1155Fee() public view returns (uint256) {
+        return listing1155Fee;
     }
 
     // Many nftContractAddress for different catagories
     // Only One Market Place
-    function createMarketItem(
+    function listNftToMarket(
         address nftContractAddress,
         uint256 tokenId,
         uint256 price
     ) public payable nonReentrant returns (uint256) {
         require(price > 0, "Price must be at least 1 wei");
         require(
-            msg.value == listingFee,
+            msg.value == listingNFTFee,
             "Price must be equal to listing price"
         );
-        _marketItemIds.increment();
-        uint256 marketItemId = _marketItemIds.current();
+        _marketNftIds.increment();
+        uint256 marketNftId = _marketNftIds.current();
 
-        address creator = NFT(nftContractAddress).getTokenCreatorById(tokenId);
-
-        require(
-            creator == tx.origin || listingPermit[creator][tx.origin] == true,
-            "Not Permit to list on Market"
-        );
-
-        marketItemIdToMarketItem[marketItemId] = MarketItem(
-            marketItemId,
+        _NftIDtoMarketNftItem[marketNftId] = MarketNftItem(
+            marketNftId,
             nftContractAddress,
             tokenId,
-            payable(creator), // creator
-            payable(tx.origin), // seller
-            payable(address(0)), // owner
+            payable(msg.sender), // seller
             price,
             false,
             false
         );
 
         IERC721(nftContractAddress).transferFrom(
-            tx.origin,
+            msg.sender,
             address(this),
             tokenId
         );
 
-        emit MarketItemCreated(
-            marketItemId,
+        emit NftItemEvent(
+            marketNftId,
             nftContractAddress,
             tokenId,
-            payable(creator),
-            payable(tx.origin),
+            payable(msg.sender),
             payable(address(0)),
             price,
-            false,
             false
         );
 
-        return marketItemId;
+        return marketNftId;
     }
 
-    function createBatchMarketItem(
+    function listBatchNftToMarket(
         address nftContractAddress,
         uint256[] memory tokenId,
         uint256[] memory price
     ) public payable nonReentrant returns (uint256) {
         require(tokenId.length == price.length, "Not correct length");
         require(
-            msg.value == listingFee * tokenId.length,
+            msg.value == listingNFTFee * tokenId.length,
             "Price must be equal to listing price * number of tokenID in a batch"
         );
         for (uint i = 0; i < tokenId.length; i++) {
-            _marketItemIds.increment();
-            uint256 marketItemId = _marketItemIds.current();
+            _marketNftIds.increment();
+            uint256 marketNftId = _marketNftIds.current();
 
-            address creator = NFT(nftContractAddress).getTokenCreatorById(
-                tokenId[i]
-            );
-
-            require(
-                creator == tx.origin ||
-                    listingPermit[creator][tx.origin] == true,
-                "Not Permit to list on Market"
-            );
-
-            marketItemIdToMarketItem[marketItemId] = MarketItem(
-                marketItemId,
+            _NftIDtoMarketNftItem[marketNftId] = MarketNftItem(
+                marketNftId,
                 nftContractAddress,
                 tokenId[i],
-                payable(creator), // creator
-                payable(tx.origin), // seller
-                payable(address(0)), // owner
+                payable(msg.sender), // seller
                 price[i],
                 false,
                 false
             );
 
             IERC721(nftContractAddress).transferFrom(
-                tx.origin,
+                msg.sender,
                 address(this),
                 tokenId[i]
             );
 
-            emit MarketItemCreated(
-                marketItemId,
+            emit NftItemEvent(
+                marketNftId,
                 nftContractAddress,
                 tokenId[i],
-                payable(creator),
-                payable(tx.origin),
+                payable(msg.sender),
                 payable(address(0)),
+                price[i],
+                false
+            );
+        }
+        return _marketNftIds.current();
+    }
+
+    function cancelNftItem(
+        address nftContractAddress,
+        uint256 marketNftId
+    ) public payable nonReentrant {
+        MarketNftItem memory temp = _NftIDtoMarketNftItem[marketNftId];
+        uint256 tokenId = temp.tokenId;
+        require(tokenId > 0, "Market item has to exist");
+
+        require(temp.seller == msg.sender, "You are not the seller");
+
+        // return NFT to seller
+        IERC721(nftContractAddress).transferFrom(
+            address(this),
+            temp.seller,
+            tokenId
+        );
+
+        temp.canceled = true;
+
+        payable(msg.sender).transfer((listingNFTFee * 90) / 100); // get 90% of listing fee
+
+        emit NftItemEvent(
+            marketNftId,
+            nftContractAddress,
+            tokenId,
+            payable(msg.sender),
+            payable(address(0)),
+            0,
+            true
+        );
+    }
+
+    function list1155ToMarket(
+        address ERC1155ContractAddress,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 price,
+        bytes memory data
+    ) public payable nonReentrant returns (uint256) {
+        require(price > 0, "Price must be at least 1 wei");
+        require(
+            msg.value == listing1155Fee,
+            "Price must be equal to listing price"
+        );
+        require(
+            NFT1155(ERC1155ContractAddress).balanceOf(msg.sender, tokenId) > 0,
+            "Not Allow"
+        );
+        _market1155Ids.increment();
+        uint256 market1155Ids = _market1155Ids.current();
+
+        _1155IDtoMarketNftItem[market1155Ids] = Market1155Item(
+            market1155Ids,
+            ERC1155ContractAddress,
+            tokenId,
+            amount,
+            payable(msg.sender), // seller
+            price,
+            false,
+            false
+        );
+
+        IERC1155(ERC1155ContractAddress).safeTransferFrom(
+            msg.sender,
+            address(this),
+            tokenId,
+            amount,
+            data
+        );
+
+        emit ERC1155ItemEvent(
+            market1155Ids,
+            ERC1155ContractAddress,
+            tokenId,
+            amount,
+            payable(msg.sender),
+            payable(address(0)),
+            price,
+            false
+        );
+
+        return market1155Ids;
+    }
+
+    function listBatch1155ToMarket(
+        address ERC1155ContractAddress,
+        uint256[] memory tokenId,
+        uint256[] memory amount,
+        uint256[] memory price,
+        bytes memory data
+    ) public payable nonReentrant returns (uint256) {
+        require(
+            tokenId.length == price.length && tokenId.length == amount.length,
+            "Not correct length"
+        );
+        uint256 i;
+        for (i = 0; i < tokenId.length; i++) {
+            require(price[i] > 0, "Price must be at least 1 wei");
+        }
+
+        require(
+            msg.value == listing1155Fee * tokenId.length,
+            "Price must be equal to listing price"
+        );
+        address[] memory tempAccount = new address[](tokenId.length);
+
+        for (i = 0; i < tokenId.length; i++) {
+            tempAccount[i] = msg.sender;
+        }
+
+        uint256[] memory tempBalance = NFT1155(ERC1155ContractAddress)
+            .balanceOfBatch(tempAccount, tokenId);
+
+        for (i = 0; i < tokenId.length; i++) {
+            require(tempBalance[i] > 0, "Not Allow");
+        }
+
+        for (i = 0; i < tokenId.length; i++) {
+            _market1155Ids.increment();
+            uint256 market1155Ids = _market1155Ids.current();
+
+            _1155IDtoMarketNftItem[market1155Ids] = Market1155Item(
+                market1155Ids,
+                ERC1155ContractAddress,
+                tokenId[i],
+                amount[i],
+                payable(msg.sender), // seller
                 price[i],
                 false,
                 false
             );
+
+            IERC1155(ERC1155ContractAddress).safeTransferFrom(
+                msg.sender,
+                address(this),
+                tokenId[i],
+                amount[i],
+                data
+            );
+
+            emit ERC1155ItemEvent(
+                market1155Ids,
+                ERC1155ContractAddress,
+                tokenId[i],
+                amount[i],
+                payable(msg.sender),
+                payable(address(0)),
+                price[i],
+                false
+            );
         }
-        return _marketItemIds.current();
+        return _market1155Ids.current();
     }
 
-    /**
-     * @dev Cancel a market item, only seller can cancel market item (not creator, as some cases seller represent creator to list in market)
-     */
-    function cancelMarketItem(
-        address nftContractAddress,
-        uint256 marketItemId
+    function cancel1155Item(
+        address ERC1155ContractAddress,
+        uint256 market1155Id,
+        bytes memory data
     ) public payable nonReentrant {
-        MarketItem memory temp = marketItemIdToMarketItem[marketItemId];
+        Market1155Item memory temp = _1155IDtoMarketNftItem[market1155Id];
         uint256 tokenId = temp.tokenId;
         require(tokenId > 0, "Market item has to exist");
+        require(temp.seller == msg.sender, "You are not the seller");
 
-        require(temp.seller == tx.origin, "You are not the seller");
-
-        // return NFT to creator
-        IERC721(nftContractAddress).transferFrom(
+        // return ERC1155 to seller
+        IERC1155(ERC1155ContractAddress).safeTransferFrom(
             address(this),
-            temp.creator,
-            tokenId
+            temp.seller,
+            tokenId,
+            temp.amount,
+            data
         );
 
-        temp.owner = temp.creator;
         temp.canceled = true;
+        payable(msg.sender).transfer((listing1155Fee * 90) / 100); // get 90% of listing fee
 
-        _tokensCanceled.increment();
-        payable(tx.origin).transfer((listingFee * 90) / 100); // get 90% of listing fee
+        emit ERC1155ItemEvent(
+            market1155Id,
+            ERC1155ContractAddress,
+            tokenId,
+            temp.amount,
+            payable(msg.sender),
+            payable(address(0)),
+            temp.price,
+            true
+        );
     }
 
     /**
-     * @dev Get Latest Market Item by the token id
+     * @dev Creates a market sale by transfering msg.sender money to the seller and NFT token from the
+     * marketplace to the msg.sender. It also sends the listingNFTFee to the marketplace owner.
      */
-    function getLatestMarketItemByTokenId(
-        uint256 tokenId
-    ) public view returns (MarketItem memory, bool) {
-        uint256 itemsCount = _marketItemIds.current();
-
-        for (uint256 i = itemsCount; i > 0; i--) {
-            MarketItem memory item = marketItemIdToMarketItem[i];
-            if (item.tokenId != tokenId) continue;
-            return (item, true);
-        }
-
-        // What is the best practice for returning a "null" value in solidity?
-        // Reverting does't seem to be the best approach as it would throw an error on frontend
-        MarketItem memory emptyMarketItem;
-        return (emptyMarketItem, false);
-    }
-
-    /**
-     * @dev Creates a market sale by transfering tx.origin money to the seller and NFT token from the
-     * marketplace to the tx.origin. It also sends the listingFee to the marketplace owner.
-     */
-    function createMarketSale(
+    function createNftSale(
         address nftContractAddress,
-        uint256 marketItemId
+        uint256 marketNftId
     ) public payable nonReentrant {
-        uint256 price = marketItemIdToMarketItem[marketItemId].price;
-        uint256 tokenId = marketItemIdToMarketItem[marketItemId].tokenId;
+        uint256 price = _NftIDtoMarketNftItem[marketNftId].price;
+        uint256 tokenId = _NftIDtoMarketNftItem[marketNftId].tokenId;
         require(
             msg.value == price,
             "Please submit the asking price in order to continue"
         );
 
-        marketItemIdToMarketItem[marketItemId].owner = payable(tx.origin);
-        marketItemIdToMarketItem[marketItemId].sold = true;
+        _NftIDtoMarketNftItem[marketNftId].sold = true;
 
-        marketItemIdToMarketItem[marketItemId].seller.transfer(msg.value);
+        _NftIDtoMarketNftItem[marketNftId].seller.transfer(msg.value);
         IERC721(nftContractAddress).transferFrom(
             address(this),
-            tx.origin,
+            msg.sender,
             tokenId
         );
 
-        _tokensSold.increment();
+        payable(_marketOwner).transfer(listingNFTFee);
 
-        payable(_marketOwner).transfer(listingFee);
+        emit NftItemEvent(
+            marketNftId,
+            nftContractAddress,
+            tokenId,
+            _NftIDtoMarketNftItem[marketNftId].seller,
+            msg.sender,
+            price,
+            false
+        );
     }
 
-    /**
-     * @dev Fetch non sold and non canceled market items
-     */
-    function fetchAvailableMarketItems()
-        public
-        view
-        returns (MarketItem[] memory)
-    {
-        uint256 itemsCount = _marketItemIds.current();
-        uint256 soldItemsCount = _tokensSold.current();
-        uint256 canceledItemsCount = _tokensCanceled.current();
-        uint256 availableItemsCount = itemsCount -
-            soldItemsCount -
-            canceledItemsCount;
-        MarketItem[] memory marketItems = new MarketItem[](availableItemsCount);
-
-        uint256 currentIndex = 0;
-        for (uint256 i = 0; i < itemsCount; i++) {
-            // https://github.com/dabit3/polygon-ethereum-nextjs-marketplace/blob/main/contracts/Market.sol#L111
-            MarketItem memory item = marketItemIdToMarketItem[i + 1];
-            if (item.owner != address(0)) continue;
-            marketItems[currentIndex] = item;
-            currentIndex += 1;
-        }
-        return marketItems;
-    }
-
-    /**
-     * @dev This seems to be the best way to compare strings in Solidity
-     */
-    function compareStrings(
-        string memory a,
-        string memory b
-    ) public pure returns (bool) {
-        return (keccak256(abi.encodePacked((a))) ==
-            keccak256(abi.encodePacked((b))));
-    }
-
-    /**
-     * @dev Since we can't access structs properties dinamically, this function selects the address
-     * we're looking for between "owner" and "seller"
-     */
-    function getMarketItemAddressByProperty(
-        MarketItem memory item,
-        string memory property
-    ) public pure returns (address) {
+    function create1155Sale(
+        address ERC1155ContractAddress,
+        uint256 market1155Id,
+        uint256 _amount,
+        bytes memory data
+    ) public payable nonReentrant {
+        uint256 price = _1155IDtoMarketNftItem[market1155Id].price;
+        uint256 tokenId = _1155IDtoMarketNftItem[market1155Id].tokenId;
+        uint256 amountTemp = _1155IDtoMarketNftItem[market1155Id].amount;
+        address payable seller = _1155IDtoMarketNftItem[market1155Id].seller;
+        require(amountTemp < _amount, "More than ERC1155 amount");
         require(
-            compareStrings(property, "seller") ||
-                compareStrings(property, "owner"),
-            "Parameter must be 'seller' or 'owner'"
+            msg.value == price * _amount,
+            "Please submit the asking price in order to continue"
+        );
+        seller.transfer(msg.value);
+        IERC1155(ERC1155ContractAddress).safeTransferFrom(
+            address(this),
+            msg.sender,
+            tokenId,
+            _amount,
+            data
         );
 
-        return compareStrings(property, "seller") ? item.seller : item.owner;
-    }
+        amountTemp -= _amount;
+        payable(_marketOwner).transfer(listing1155Fee * _amount);
 
-    /**
-     * @dev Fetch market items that are being listed by the tx.origin
-     */
-    function fetchSellingMarketItems()
-        public
-        view
-        returns (MarketItem[] memory)
-    {
-        return fetchMarketItemsByAddressProperty("seller");
-    }
-
-    /**
-     * @dev Fetch market items that are owned by the tx.origin
-     */
-    function fetchOwnedMarketItems() public view returns (MarketItem[] memory) {
-        return fetchMarketItemsByAddressProperty("owner");
-    }
-
-    /**
-     * @dev Fetches market items according to the its requested address property that
-     * can be "owner" or "seller". The original implementations were two functions that were
-     * almost the same, changing only a property access. This refactored version requires an
-     * addional auxiliary function, but avoids repeating code.
-     * See original: https://github.com/dabit3/polygon-ethereum-nextjs-marketplace/blob/main/contracts/Market.sol#L121
-     */
-    function fetchMarketItemsByAddressProperty(
-        string memory _addressProperty
-    ) public view returns (MarketItem[] memory) {
-        require(
-            compareStrings(_addressProperty, "seller") ||
-                compareStrings(_addressProperty, "owner"),
-            "Parameter must be 'seller' or 'owner'"
+        emit ERC1155ItemEvent(
+            market1155Id,
+            ERC1155ContractAddress,
+            tokenId,
+            _amount,
+            seller,
+            payable(msg.sender),
+            price,
+            false
         );
-        uint256 totalItemsCount = _marketItemIds.current();
-        uint256 itemCount = 0;
-        uint256 currentIndex = 0;
-
-        for (uint256 i = 0; i < totalItemsCount; i++) {
-            MarketItem memory item = marketItemIdToMarketItem[i + 1];
-            address addressPropertyValue = getMarketItemAddressByProperty(
-                item,
-                _addressProperty
-            );
-            if (addressPropertyValue != tx.origin) continue;
-            itemCount += 1;
-        }
-
-        MarketItem[] memory items = new MarketItem[](itemCount);
-
-        for (uint256 i = 0; i < totalItemsCount; i++) {
-            MarketItem memory item = marketItemIdToMarketItem[i + 1];
-            address addressPropertyValue = getMarketItemAddressByProperty(
-                item,
-                _addressProperty
-            );
-            if (addressPropertyValue != tx.origin) continue;
-            items[currentIndex] = item;
-            currentIndex += 1;
-        }
-        return items;
     }
 
     function testForFun() public pure returns (uint256) {
