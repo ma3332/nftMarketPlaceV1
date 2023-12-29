@@ -67,6 +67,24 @@ contract NFT is ERC721URIStorage, Ownable {
         return _tokenIds.current();
     }
 
+    function exists1(
+        uint256 num,
+        uint256[] memory numbers1
+    ) internal pure returns (bool) {
+        for (uint i = 0; i < numbers1.length; i++) {
+            if (numbers1[i] == num) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function burnToken(uint256 tokenID) public {
+        uint256[] memory ownedTokenIds = getTokensOwnedByMe();
+        require(exists1(tokenID, ownedTokenIds), "Not Allowed");
+        _burn(tokenID);
+    }
+
     function getTokensOwnedByMe() public view returns (uint256[] memory) {
         uint256 numberOfExistingTokens = _tokenIds.current();
         uint256 numberOfTokensOwned = balanceOf(msg.sender);
