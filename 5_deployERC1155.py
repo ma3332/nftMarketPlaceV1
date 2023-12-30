@@ -61,7 +61,9 @@ nonce = w3.eth.get_transaction_count(my_address)
 uri = "https://fidec.io/abcxyz"
 marketPlace_proxy = "0x5348A5931EAC250584a4ee85F994e98A642D99Fd"  # remember this is proxy of market place, not market place
 
-transaction = nft_contract.constructor(uri, marketPlace_proxy).build_transaction(
+transaction = nft_contract.constructor(
+    uri, "Test", "T1", marketPlace_proxy
+).build_transaction(
     {
         "chainId": chain_id,
         "gasPrice": w3.eth.gas_price,

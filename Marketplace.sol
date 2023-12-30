@@ -252,7 +252,7 @@ contract Marketplace is ReentrancyGuard {
         address ERC1155ContractAddress,
         uint256 tokenId,
         uint256 amount,
-        uint256 price,
+        uint256 price, // price for each item (not total amount)
         bytes memory data
     ) public payable nonReentrant returns (uint256) {
         require(price > 0, "Price must be at least 1 wei");

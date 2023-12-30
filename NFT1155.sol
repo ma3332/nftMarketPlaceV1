@@ -11,15 +11,36 @@ contract NFT1155 is ERC1155, Ownable {
     Counters.Counter private _tokenIds;
     mapping(uint256 => string) private _tokenURIs;
 
+    // Token 1155 name
+    string private name;
+
+    // Token 1155 symbol
+    string private symbol;
+
     address public marketplaceProxy;
 
     event MetadataUpdate(uint256 _tokenId);
 
     constructor(
         string memory _uri,
+        string memory _name,
+        string memory _symbol,
         address _marketplaceProxy
     ) ERC1155(_uri) Ownable(msg.sender) {
         marketplaceProxy = _marketplaceProxy;
+        name = _name;
+        symbol = _symbol;
+    }
+
+    function getName() public view virtual returns (string memory) {
+        return name;
+    }
+
+    /**
+     * @dev See {IERC721Metadata-symbol}.
+     */
+    function getSymbol() public view virtual returns (string memory) {
+        return symbol;
     }
 
     function setUpMarketProxy(address _proxy) public onlyOwner {
