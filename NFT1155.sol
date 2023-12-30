@@ -46,7 +46,7 @@ contract NFT1155 is ERC1155, Ownable {
         return _tokenIds.current();
     }
 
-    function mint(
+    function mint1155Token(
         uint256 value,
         bytes memory data,
         string memory tokenURI
@@ -57,7 +57,7 @@ contract NFT1155 is ERC1155, Ownable {
         setApprovalForAll(marketplaceProxy, true);
     }
 
-    function mintBatch(
+    function mint1155BatchToken(
         uint256[] memory values,
         bytes memory data,
         string[] memory tokenURI

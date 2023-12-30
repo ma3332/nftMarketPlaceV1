@@ -34,7 +34,7 @@ contract NFT is ERC721URIStorage, Ownable {
     // need tokenURI is a link pointed to IFPS or some other decentralized DB
     // user need to submit metadata and image to DB to check hash, then server push data to IPFS and get back the link
     // this link will be "tokenURI"
-    function mintToken(string memory tokenURI) public returns (uint256) {
+    function mintNftToken(string memory tokenURI) public returns (uint256) {
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId);
@@ -48,7 +48,9 @@ contract NFT is ERC721URIStorage, Ownable {
         return newItemId;
     }
 
-    function mintBatchToken(string[] memory tokenURI) public returns (uint256) {
+    function mintNftBatchToken(
+        string[] memory tokenURI
+    ) public returns (uint256) {
         for (uint i = 0; i < tokenURI.length; i++) {
             _tokenIds.increment();
             uint256 newItemId = _tokenIds.current();
