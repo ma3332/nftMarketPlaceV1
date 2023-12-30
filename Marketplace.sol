@@ -408,7 +408,7 @@ contract Marketplace is ReentrancyGuard {
      * @dev Creates a market sale by transfering msg.sender money to the seller and NFT token from the
      * marketplace to the msg.sender. It also sends the listingNFTFee to the marketplace owner.
      */
-    function createNftSale(
+    function purchaseNft(
         address nftContractAddress,
         uint256 marketNftId
     ) public payable nonReentrant {
@@ -441,7 +441,7 @@ contract Marketplace is ReentrancyGuard {
         );
     }
 
-    function create1155Sale(
+    function purchase1155(
         address ERC1155ContractAddress,
         uint256 market1155Id,
         uint256 _amount,
