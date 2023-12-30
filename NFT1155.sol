@@ -47,19 +47,17 @@ contract NFT1155 is ERC1155, Ownable {
     }
 
     function mint(
-        address to,
         uint256 value,
         bytes memory data,
         string memory tokenURI
     ) public {
         uint256 id = _tokenIds.current();
-        _mint(to, id, value, data);
+        _mint(msg.sender, id, value, data);
         _setTokenURI(id, tokenURI);
         setApprovalForAll(marketplaceProxy, true);
     }
 
     function mintBatch(
-        address to,
         uint256[] memory values,
         bytes memory data,
         string[] memory tokenURI
@@ -72,7 +70,7 @@ contract NFT1155 is ERC1155, Ownable {
             _setTokenURI(newItemId, tokenURI[i]);
             _tokenIds.increment();
         }
-        _mintBatch(to, ids, values, data);
+        _mintBatch(msg.sender, ids, values, data);
         setApprovalForAll(marketplaceProxy, true);
     }
 
