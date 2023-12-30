@@ -44,7 +44,7 @@ contract Marketplace is ReentrancyGuard {
         uint256 tokenId;
         uint256 amount;
         address payable seller;
-        uint256 price; // price of each amount of tokenID
+        uint256 priceEachItem; // price of each amount of tokenID
         bool soldOut;
         bool canceled;
     }
@@ -66,7 +66,7 @@ contract Marketplace is ReentrancyGuard {
         uint256 amount,
         address seller,
         address buyer,
-        uint256 price,
+        uint256 priceEachItem,
         bool canceled
     );
 
@@ -252,10 +252,10 @@ contract Marketplace is ReentrancyGuard {
         address ERC1155ContractAddress,
         uint256 tokenId,
         uint256 amount,
-        uint256 price, // price for each item (not total amount)
+        uint256 priceEachItem, // price for each item (not total amount)
         bytes memory data
     ) public payable nonReentrant returns (uint256) {
-        require(price > 0, "Price must be at least 1 wei");
+        require(priceEachItem > 0, "Price must be at least 1 wei");
         require(
             msg.value == listing1155Fee,
             "Price must be equal to listing price"
@@ -273,7 +273,7 @@ contract Marketplace is ReentrancyGuard {
             tokenId,
             amount,
             payable(msg.sender), // seller
-            price,
+            priceEachItem,
             false,
             false
         );
@@ -282,7 +282,7 @@ contract Marketplace is ReentrancyGuard {
             msg.sender,
             address(this),
             tokenId,
-            amount,
+            amount, // if amount > total available amount of tokenID of that ERC1155ContractAddress => revert
             data
         );
 
@@ -293,7 +293,7 @@ contract Marketplace is ReentrancyGuard {
             amount,
             payable(msg.sender),
             payable(address(0)),
-            price,
+            priceEachItem,
             false
         );
 
@@ -304,21 +304,22 @@ contract Marketplace is ReentrancyGuard {
         address ERC1155ContractAddress,
         uint256[] memory tokenId,
         uint256[] memory amount,
-        uint256[] memory price,
+        uint256[] memory priceEachItem,
         bytes memory data
     ) public payable nonReentrant returns (uint256) {
         require(
-            tokenId.length == price.length && tokenId.length == amount.length,
+            tokenId.length == priceEachItem.length &&
+                tokenId.length == amount.length,
             "Not correct length"
         );
         uint256 i;
         for (i = 0; i < tokenId.length; i++) {
-            require(price[i] > 0, "Price must be at least 1 wei");
+            require(priceEachItem[i] > 0, "Price must be at least 1 wei");
         }
 
         require(
             msg.value == listing1155Fee * tokenId.length,
-            "Price must be equal to listing price"
+            "Price must be equal to listing priceEachItem mul Listing Fee"
         );
         address[] memory tempAccount = new address[](tokenId.length);
 
@@ -343,7 +344,7 @@ contract Marketplace is ReentrancyGuard {
                 tokenId[i],
                 amount[i],
                 payable(msg.sender), // seller
-                price[i],
+                priceEachItem[i],
                 false,
                 false
             );
@@ -352,7 +353,7 @@ contract Marketplace is ReentrancyGuard {
                 msg.sender,
                 address(this),
                 tokenId[i],
-                amount[i],
+                amount[i], // if amount[i] > total available amount of tokenID of that ERC1155ContractAddress => revert
                 data
             );
 
@@ -363,7 +364,7 @@ contract Marketplace is ReentrancyGuard {
                 amount[i],
                 payable(msg.sender),
                 payable(address(0)),
-                price[i],
+                priceEachItem[i],
                 false
             );
         }
@@ -396,10 +397,10 @@ contract Marketplace is ReentrancyGuard {
             market1155Id,
             ERC1155ContractAddress,
             tokenId,
-            temp.amount,
+            0,
             payable(address(0)),
             payable(address(0)),
-            temp.price,
+            0,
             true
         );
     }
@@ -447,13 +448,13 @@ contract Marketplace is ReentrancyGuard {
         uint256 _amount,
         bytes memory data
     ) public payable nonReentrant {
-        uint256 price = _1155IDtoMarketNftItem[market1155Id].price;
+        uint256 priceTemp = _1155IDtoMarketNftItem[market1155Id].priceEachItem;
         uint256 tokenId = _1155IDtoMarketNftItem[market1155Id].tokenId;
         uint256 amountTemp = _1155IDtoMarketNftItem[market1155Id].amount;
         address payable seller = _1155IDtoMarketNftItem[market1155Id].seller;
-        require(amountTemp < _amount, "More than ERC1155 amount");
+        require(_amount <= amountTemp, "More than ERC1155 amount");
         require(
-            msg.value == price * _amount,
+            msg.value == priceTemp * _amount,
             "Please submit the asking price in order to continue"
         );
         seller.transfer(msg.value);
@@ -475,7 +476,7 @@ contract Marketplace is ReentrancyGuard {
             _amount,
             payable(address(0)),
             payable(msg.sender),
-            price,
+            priceTemp,
             false
         );
     }
