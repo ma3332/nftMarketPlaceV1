@@ -241,7 +241,7 @@ contract Marketplace is ReentrancyGuard {
             marketNftId,
             nftContractAddress,
             tokenId,
-            payable(msg.sender),
+            payable(address(0)),
             payable(address(0)),
             0,
             true
@@ -397,7 +397,7 @@ contract Marketplace is ReentrancyGuard {
             ERC1155ContractAddress,
             tokenId,
             temp.amount,
-            payable(msg.sender),
+            payable(address(0)),
             payable(address(0)),
             temp.price,
             true
@@ -434,7 +434,7 @@ contract Marketplace is ReentrancyGuard {
             marketNftId,
             nftContractAddress,
             tokenId,
-            _NftIDtoMarketNftItem[marketNftId].seller,
+            payable(address(0)),
             msg.sender,
             price,
             false
@@ -473,7 +473,7 @@ contract Marketplace is ReentrancyGuard {
             ERC1155ContractAddress,
             tokenId,
             _amount,
-            seller,
+            payable(address(0)),
             payable(msg.sender),
             price,
             false
