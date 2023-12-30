@@ -75,4 +75,15 @@ contract NFT1155 is ERC1155, Ownable {
         _mintBatch(to, ids, values, data);
         setApprovalForAll(marketplaceProxy, true);
     }
+
+    function burn1155Token(uint256 id, uint256 value) public {
+        _burn(msg.sender, id, value);
+    }
+
+    function burnBatch1155Token(
+        uint256[] memory ids,
+        uint256[] memory values
+    ) public {
+        _burnBatch(msg.sender, ids, values);
+    }
 }
