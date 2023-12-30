@@ -22,8 +22,8 @@ contract NFT1155 is ERC1155, Ownable {
         marketplaceProxy = _marketplaceProxy;
     }
 
-    function setUpOwner(address _owner) public onlyOwner {
-        marketplaceProxy = _owner;
+    function setUpMarketProxy(address _proxy) public onlyOwner {
+        marketplaceProxy = _proxy;
     }
 
     function setURI(string memory newuri) public onlyOwner {
