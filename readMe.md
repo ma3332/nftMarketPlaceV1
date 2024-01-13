@@ -25,8 +25,8 @@ Các bước làm
    - Tên của Smart Contract
    - Loại Smart Contract (NFT hay 1155)
    - Địa chỉ Address của Smart Contract
-   - HÌnh ảnh Đại diện cho các Smart Contract đó
-     // Các bước này hoàn toàn làm từ phía admin nên ko cần UI-UX, có thể làm bằng cmd
+   - HÌnh ảnh Đại diện cho các Smart Contract đó (Avatar)
+     - Các bước này hoàn toàn làm từ phía admin nên ko cần UI-UX, có thể làm bằng cmd
 3. Xây dựng Web3 với provider là Metamask kết nối với Ganache UI. Ở trang "Create NFT/1155 Page" (tham khảo figma)
    - Query từ DB (ở bước 2)
    - Mỗi một SmartContract là Category
@@ -46,7 +46,7 @@ Các bước làm
      - address indexed to
      - uint256 indexed tokenId
 
-   - 5.9 Chính thức lưu và \*\*DB các thông tin sau (lưu ý \*\*DB này có thể khác với \*DB tạo ở bước 2)
+   - 5.9 Chính thức lưu và \*\*DB các thông tin sau (lưu ý \*\*DB này có thể khác với \*DB tạo ở bước 2). Mỗi một NFT Contract sẽ có 1 collection DB riêng (tham khảo https://app.diagrams.net/#G15WtVL8gwtodIODdIlUdb1JdqZ8zlKWlj, các hình màu đỏ tượng trưng cho DB). Schema sẽ như sau:
 
      - NFT Smart Contract Address
      - NFT Smart Contract Name
@@ -64,6 +64,9 @@ Các bước làm
 7. Trường hợp user muốn tạo NFT Batch thì chạy hàm mintNftBatchToken() tương ứng với NFT Smart Contract đó, flow sau đó sẽ tương tự như ở bước 5 (tham khảo https://app.diagrams.net/#G15WtVL8gwtodIODdIlUdb1JdqZ8zlKWlj - ô Create NFT/ 1155 - Choose NFT Category)
 8. Trường hợp user muốn xóa NFT thì chạy hàm burnNftToken() tương ứng với NFT Smart Contract đó. Sau khi thực hiện xong sẽ xóa toàn bộ thông tin tương ứng với tokenId trên \*\*DB. (tham khảo https://app.diagrams.net/#G15WtVL8gwtodIODdIlUdb1JdqZ8zlKWlj - ô Create NFT/ 1155 - Choose NFT Category)
 
-Làm tương tự từ bước 2 đến bước 8 trở đi với các smart contract ERC1155. Lưu ý hàm và sự kiện của ERC1155 khác so với NFT nên cần tham khảo lại flow trong https://app.diagrams.net/#G15WtVL8gwtodIODdIlUdb1JdqZ8zlKWlj - ô Create NFT/ 1155 - Choose 1155 Category
+Làm tương tự từ bước 2 đến bước 8 trở đi với các smart contract ERC1155.
+
+- Lưu ý hàm và sự kiện của ERC1155 khác so với NFT nên cần tham khảo lại flow trong https://app.diagrams.net/#G15WtVL8gwtodIODdIlUdb1JdqZ8zlKWlj - ô Create NFT/ 1155 - Choose 1155 Category
+- DB của 1155 khác với DB của NFT
 
 # Task 2: Xây dựng luồng cho NFT MarketPlace
