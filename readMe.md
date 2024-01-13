@@ -32,20 +32,21 @@ Các bước làm
    - Mỗi một SmartContract là Category
 4. User chọn 1 Category bất kì của trang "Create NFT/1155 Page" với filter NFT sẽ ra trang "Create NFT Single Create Page"
 5. Input của trang "Create NFT Single Create Page"
-   5.1 Điền đầy đủ các thông tin Upload Image, NFT Name, NFT Information
-   5.2 Hash Image & Hash NFT Name + Metadata ở phía client
-   5.3 Kiểm tra xem thông tin ở trên có trùng trên \*DB không
-   5.4 Nếu không trùng thì Upload lên IPFS
-   5.5 IPFS sẽ trả về một đường link "https://ipfs.io/ipfs/CID?filename" trong đó CID là content identifier. Đây chính là input vào function "mintNftToken(string memory tokenURI)" của NFT Smart Contract
-   5.6 Thực hiện lệnh "mintNftToken" và thông báo khách hàng đã upload lên IPFS và tạo NFT thành công
-   5.7 Kiểm tra lại thông tin đã tạo
-   5.8 Lắng nghe sự kiện "event Transfer( address indexed from, address indexed to, uint256 indexed tokenId )" của NFT SmartContract đó và lấy các trường thông tin
 
-   - address indexed from
-   - address indexed to
-   - uint256 indexed tokenId
+   - 5.1 Điền đầy đủ các thông tin Upload Image, NFT Name, NFT Information
+   - 5.2 Hash Image & Hash NFT Name + Metadata ở phía client
+   - 5.3 Kiểm tra xem thông tin ở trên có trùng trên \*DB không
+   - 5.4 Nếu không trùng thì Upload lên IPFS
+   - 5.5 IPFS sẽ trả về một đường link "https://ipfs.io/ipfs/CID?filename" trong đó CID là content identifier. Đây chính là input vào function "mintNftToken(string memory tokenURI)" của NFT Smart Contract
+   - 5.6 Thực hiện lệnh "mintNftToken" và thông báo khách hàng đã upload lên IPFS và tạo NFT thành công
+   - 5.7 Kiểm tra lại thông tin đã tạo
+   - 5.8 Lắng nghe sự kiện "event Transfer( address indexed from, address indexed to, uint256 indexed tokenId )" của NFT SmartContract đó và lấy các trường thông tin
 
-     5.9 Chính thức lưu và \*\*DB các thông tin sau (lưu ý \*\*DB này có thể khác với \*DB tạo ở bước 2)
+     - address indexed from
+     - address indexed to
+     - uint256 indexed tokenId
+
+   - 5.9 Chính thức lưu và \*\*DB các thông tin sau (lưu ý \*\*DB này có thể khác với \*DB tạo ở bước 2)
 
      - NFT Smart Contract Address
      - NFT Smart Contract Name
