@@ -15,12 +15,12 @@ Các bước làm
 
 0. Thay đổi các trường thông tin của file env (theo như PubKey và PrivKey của Ganache hoặc của Account tự tạo trên testnet)
 1. Chạy lần lượt các file python (từ 1 đến 5). Hoàn toàn có thể dùng thư viện Hardhat (JS) để deploy các smart contract này nếu muốn
-   1_deployProxyAdmin.py: ProxyAdmin là SmartContract quản lý Proxy
-   2_deployMarketPlace.py: MarketPlace là SmartContract quản lý Market, nơi người dùng sẽ đăng các NFT hoặc 1155 của họ lên đây
-   3_deployProxy.py: Người dùng sẽ không tương tác trực tiếp với MarketPlace ở bước 2 mà sẽ tương tác thông qua Proxy. Proxy này sẽ giúp trong trường hợp MarketPlace thay đổi (thêm function, thay đổi parameters ...) thì người dùng sẽ không bị ảnh hưởng
-   4_deployNFT.py: NFT là smartContract mà người dùng sử dụng để tạo NFT (sau khi tạo xong NFT thì mới có thể đăng lên MarketPlace thông qua Proxy)
-   5_deployERC1155.py: ERC1155 là smartContract mà người dùng sử dụng để tạo 1155 (sau khi tạo xong 1155 thì mới có thể đăng lên MarketPlace thông qua Proxy)
-   6_deployMarketPlaceV2.py: MarketPlaceV2 giả định sau khi đã nâng cấp - thêm 1 function testforfun(). Người dùng vẫn sẽ tương tác với MarketPlaceV2 thông qua proxy như bình thường.
+   - 1_deployProxyAdmin.py: ProxyAdmin là SmartContract quản lý Proxy
+   - 2_deployMarketPlace.py: MarketPlace là SmartContract quản lý Market, nơi người dùng sẽ đăng các NFT hoặc 1155 của họ lên đây
+   - 3_deployProxy.py: Người dùng sẽ không tương tác trực tiếp với MarketPlace ở bước 2 mà sẽ tương tác thông qua Proxy. Proxy này sẽ giúp trong trường hợp MarketPlace thay đổi (thêm function, thay đổi parameters ...) thì người dùng sẽ không bị ảnh hưởng
+   - 4_deployNFT.py: NFT là smartContract mà người dùng sử dụng để tạo NFT (sau khi tạo xong NFT thì mới có thể đăng lên MarketPlace thông qua Proxy)
+   - 5_deployERC1155.py: ERC1155 là smartContract mà người dùng sử dụng để tạo 1155 (sau khi tạo xong 1155 thì mới có thể đăng lên MarketPlace thông qua Proxy)
+   - 6_deployMarketPlaceV2.py: MarketPlaceV2 giả định sau khi đã nâng cấp - thêm 1 function testforfun(). Người dùng vẫn sẽ tương tác với MarketPlaceV2 thông qua proxy như bình thường.
 2. Tạo một vài NFT Smart Contract bằng cách chạy file 4_deployNFT.py. Sau đó Lưu trên \*DB các trường thông tin sau
    - Tên của Smart Contract
    - Loại Smart Contract (NFT hay 1155)
