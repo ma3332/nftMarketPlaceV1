@@ -26,7 +26,7 @@ Các bước làm
    - Loại Smart Contract (NFT hay 1155)
    - Địa chỉ Address của Smart Contract
    - HÌnh ảnh Đại diện cho các Smart Contract đó (Avatar)
-   - // Các bước này hoàn toàn làm từ phía admin nên ko cần UI-UX, có thể làm bằng cmd //
+   - // Các bước này hoàn toàn làm từ phía admin nên ko cần UI-UX, có thể làm thủ công ở backend //
 3. Xây dựng Web3 với provider là Metamask kết nối với Ganache UI. Ở trang "Create NFT/1155 Page" (tham khảo figma)
    - Query từ DB (ở bước 2)
    - Mỗi một SmartContract là Category
