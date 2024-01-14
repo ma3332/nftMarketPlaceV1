@@ -21,7 +21,7 @@ Các bước làm
    - 4_deployNFT.py: NFT là smartContract mà người dùng sử dụng để tạo NFT (sau khi tạo xong NFT thì mới có thể đăng lên MarketPlace thông qua Proxy)
    - 5_deployERC1155.py: ERC1155 là smartContract mà người dùng sử dụng để tạo 1155 (sau khi tạo xong 1155 thì mới có thể đăng lên MarketPlace thông qua Proxy)
    - 6_deployMarketPlaceV2.py: MarketPlaceV2 giả định sau khi đã nâng cấp - thêm 1 function testforfun(). Người dùng vẫn sẽ tương tác với MarketPlaceV2 thông qua proxy như bình thường.
-2. Tạo một vài NFT Smart Contract bằng cách chạy file 4_deployNFT.py. Sau đó Lưu trên \*DB các trường thông tin sau
+2. Tạo một vài NFT Smart Contract bằng cách chạy file 4_deployNFT.py vài lần. Sau đó Lưu trên \*DB các trường thông tin sau
    - Tên của Smart Contract
    - Loại Smart Contract (NFT hay 1155)
    - Địa chỉ Address của Smart Contract
