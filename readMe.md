@@ -48,6 +48,7 @@ Các bước làm
 
    - 5.9 Chính thức lưu vào \*\*DB các thông tin sau (lưu ý \*\*DB này có thể khác với \*DB tạo ở bước 2). Mỗi một NFT Contract sẽ có 1 collection DB riêng (tham khảo https://app.diagrams.net/#G15WtVL8gwtodIODdIlUdb1JdqZ8zlKWlj, các hình màu đỏ tượng trưng cho DB). Schema sẽ như sau:
 
+     - Chain Type (ETH, Avalance ...)
      - NFT Smart Contract Address
      - NFT Smart Contract Name
      - Image (input của User từ bước ở trên)
