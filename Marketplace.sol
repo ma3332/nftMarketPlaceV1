@@ -7,8 +7,16 @@ import "./NFT1155.sol";
 import "./ReentrancyGuard.sol";
 import "./Counters.sol";
 import "./ERC1155.sol";
+import "./IERC20.sol";
+
 
 contract Marketplace is ReentrancyGuard {
+
+    // currency in bytes
+    // ETH: 0x4554480000000000000000000000000000000000000000000000000000000000
+    // USDT: 0x5553445400000000000000000000000000000000000000000000000000000000
+    // USDC: 0x5553444300000000000000000000000000000000000000000000000000000000
+
     using Counters for Counters.Counter;
 
     Counters.Counter public _marketNftIds;
@@ -18,9 +26,9 @@ contract Marketplace is ReentrancyGuard {
 
     address payable public _marketOwner;
 
-    uint256 public listingNFTFee = 0.045 ether;
+    uint256 public commissionNFT = 2; // 2%
 
-    uint256 public listing1155Fee = 0.00045 ether;
+    uint256 public commission1155 = 1; // 0.1%
 
     mapping(uint256 => MarketNftItem) public _NftIDtoMarketNftItem;
 
@@ -28,12 +36,15 @@ contract Marketplace is ReentrancyGuard {
 
     mapping(address => mapping(address => bool)) public listingPermit;
 
+    mapping(bytes32 => address) public currency;
+
     struct MarketNftItem {
         uint256 marketNftId;
         address nftContractAddress;
         uint256 tokenId;
         address payable seller;
         uint256 price;
+        bytes32 currency;
         bool sold;
         bool canceled;
     }
@@ -45,6 +56,7 @@ contract Marketplace is ReentrancyGuard {
         uint256 amount;
         address payable seller;
         uint256 priceEachItem; // price of each amount of tokenID
+        bytes32 currency;
         bool soldOut;
         bool canceled;
     }
@@ -56,6 +68,7 @@ contract Marketplace is ReentrancyGuard {
         address seller,
         address buyer,
         uint256 price,
+        bytes32 currency,
         bool canceled
     );
 
@@ -67,6 +80,7 @@ contract Marketplace is ReentrancyGuard {
         address seller,
         address buyer,
         uint256 priceEachItem,
+        bytes32 currency,
         bool canceled
     );
 
@@ -113,20 +127,24 @@ contract Marketplace is ReentrancyGuard {
         _owner = address(0x7268bEe5516b3159E2125De548eDfcA42f0C73CB);
     }
 
-    function setUpListingNFTFee(uint256 a) public onlyOwner {
-        listingNFTFee = a;
+    function setUpCurrency(bytes32 _currency, address _address) public onlyOwner {
+        currency[_currency] = _address;
     }
 
-    function getListingNFTFee() public view returns (uint256) {
-        return listingNFTFee;
+    function setUpCommissionNFT(uint256 a) public onlyOwner {
+        commissionNFT = a;
     }
 
-    function setUpListing1155Fee(uint256 a) public onlyOwner {
-        listing1155Fee = a;
+    function getCommissionNFT() public view returns (uint256) {
+        return commissionNFT;
     }
 
-    function getListing1155Fee() public view returns (uint256) {
-        return listing1155Fee;
+    function setUpCommission1155(uint256 a) public onlyOwner {
+        commission1155 = a;
+    }
+
+    function getCommission1155() public view returns (uint256) {
+        return commission1155;
     }
 
     // Many nftContractAddress for different catagories
@@ -134,13 +152,10 @@ contract Marketplace is ReentrancyGuard {
     function listNftToMarket(
         address nftContractAddress,
         uint256 tokenId,
-        uint256 price
+        uint256 price,
+        bytes32 _currency
     ) public payable nonReentrant returns (uint256) {
-        require(price > 0, "Price must be at least 1 wei");
-        require(
-            msg.value == listingNFTFee,
-            "Price must be equal to listing price"
-        );
+        require(price > 0, "Price must be at least 1");
         _marketNftIds.increment();
         uint256 marketNftId = _marketNftIds.current();
 
@@ -150,6 +165,7 @@ contract Marketplace is ReentrancyGuard {
             tokenId,
             payable(msg.sender), // seller
             price,
+            _currency,
             false,
             false
         );
@@ -167,6 +183,7 @@ contract Marketplace is ReentrancyGuard {
             payable(msg.sender),
             payable(address(0)),
             price,
+            _currency,
             false
         );
 
@@ -176,13 +193,10 @@ contract Marketplace is ReentrancyGuard {
     function listBatchNftToMarket(
         address nftContractAddress,
         uint256[] memory tokenId,
-        uint256[] memory price
+        uint256[] memory price,
+        bytes32 _currency
     ) public payable nonReentrant returns (uint256) {
         require(tokenId.length == price.length, "Not correct length");
-        require(
-            msg.value == listingNFTFee * tokenId.length,
-            "Price must be equal to listing price * number of tokenID in a batch"
-        );
         for (uint i = 0; i < tokenId.length; i++) {
             _marketNftIds.increment();
             uint256 marketNftId = _marketNftIds.current();
@@ -193,6 +207,7 @@ contract Marketplace is ReentrancyGuard {
                 tokenId[i],
                 payable(msg.sender), // seller
                 price[i],
+                _currency,
                 false,
                 false
             );
@@ -210,6 +225,7 @@ contract Marketplace is ReentrancyGuard {
                 payable(msg.sender),
                 payable(address(0)),
                 price[i],
+                _currency,
                 false
             );
         }
@@ -235,8 +251,6 @@ contract Marketplace is ReentrancyGuard {
 
         temp.canceled = true;
 
-        payable(msg.sender).transfer((listingNFTFee * 90) / 100); // get 90% of listing fee
-
         emit NftItemEvent(
             marketNftId,
             nftContractAddress,
@@ -244,6 +258,7 @@ contract Marketplace is ReentrancyGuard {
             payable(address(0)),
             payable(address(0)),
             0,
+            temp.currency,
             true
         );
     }
@@ -253,13 +268,10 @@ contract Marketplace is ReentrancyGuard {
         uint256 tokenId,
         uint256 amount,
         uint256 priceEachItem, // price for each item (not total amount)
+        bytes32 _currency,
         bytes memory data
     ) public payable nonReentrant returns (uint256) {
         require(priceEachItem > 0, "Price must be at least 1 wei");
-        require(
-            msg.value == listing1155Fee,
-            "Price must be equal to listing price"
-        );
         require(
             NFT1155(ERC1155ContractAddress).balanceOf(msg.sender, tokenId) > 0,
             "Not Allow"
@@ -274,6 +286,7 @@ contract Marketplace is ReentrancyGuard {
             amount,
             payable(msg.sender), // seller
             priceEachItem,
+            _currency,
             false,
             false
         );
@@ -294,6 +307,7 @@ contract Marketplace is ReentrancyGuard {
             payable(msg.sender),
             payable(address(0)),
             priceEachItem,
+            _currency,
             false
         );
 
@@ -305,6 +319,7 @@ contract Marketplace is ReentrancyGuard {
         uint256[] memory tokenId,
         uint256[] memory amount,
         uint256[] memory priceEachItem,
+        bytes32 _currency,
         bytes memory data
     ) public payable nonReentrant returns (uint256) {
         require(
@@ -317,10 +332,6 @@ contract Marketplace is ReentrancyGuard {
             require(priceEachItem[i] > 0, "Price must be at least 1 wei");
         }
 
-        require(
-            msg.value == listing1155Fee * tokenId.length,
-            "Price must be equal to listing priceEachItem mul Listing Fee"
-        );
         address[] memory tempAccount = new address[](tokenId.length);
 
         for (i = 0; i < tokenId.length; i++) {
@@ -345,6 +356,7 @@ contract Marketplace is ReentrancyGuard {
                 amount[i],
                 payable(msg.sender), // seller
                 priceEachItem[i],
+                _currency,
                 false,
                 false
             );
@@ -365,6 +377,7 @@ contract Marketplace is ReentrancyGuard {
                 payable(msg.sender),
                 payable(address(0)),
                 priceEachItem[i],
+                _currency,
                 false
             );
         }
@@ -391,7 +404,6 @@ contract Marketplace is ReentrancyGuard {
         );
 
         temp.canceled = true;
-        payable(msg.sender).transfer((listing1155Fee * 90) / 100); // get 90% of listing fee
 
         emit ERC1155ItemEvent(
             market1155Id,
@@ -401,35 +413,49 @@ contract Marketplace is ReentrancyGuard {
             payable(address(0)),
             payable(address(0)),
             0,
+            temp.currency,
             true
         );
     }
 
     /**
      * @dev Creates a market sale by transfering msg.sender money to the seller and NFT token from the
-     * marketplace to the msg.sender. It also sends the listingNFTFee to the marketplace owner.
+     * marketplace to the msg.sender. It also sends the commission to the marketplace owner.
      */
+
     function purchaseNft(
         address nftContractAddress,
-        uint256 marketNftId
+        uint256 marketNftId,
+        bytes32 _currency
     ) public payable nonReentrant {
         uint256 price = _NftIDtoMarketNftItem[marketNftId].price;
         uint256 tokenId = _NftIDtoMarketNftItem[marketNftId].tokenId;
+        address payable seller = _NftIDtoMarketNftItem[marketNftId].seller;
+        bool sentSeller;
+        bool sentMarketOwner;
+        if(_currency == "ETH") {
         require(
             msg.value == price,
             "Please submit the asking price in order to continue"
         );
-
-        _NftIDtoMarketNftItem[marketNftId].sold = true;
-
-        _NftIDtoMarketNftItem[marketNftId].seller.transfer(msg.value);
+        sentSeller = seller.send(msg.value * (100 - commissionNFT)/100);
+        sentMarketOwner= payable(_marketOwner).send(msg.value * commissionNFT / 100 - 10); // minus 10 wei for safeMath
+        } else {
+            require(
+            currency[_currency] != address(0x0),
+            "No Currency Support Yet"
+        );
+            IERC20(currency[_currency]).transferFrom(msg.sender, address(this) , price);
+            sentSeller = IERC20(currency[_currency]).transfer(seller, price * (100 - commissionNFT)/100);
+            sentMarketOwner = IERC20(currency[_currency]).transfer(_marketOwner, price * commissionNFT/100 - 10);  // minus 10 wei for safeMath
+        }
+        require(sentSeller && sentMarketOwner, "Cannot transfer fee to Seller & MarketOwner");
         IERC721(nftContractAddress).transferFrom(
             address(this),
             msg.sender,
             tokenId
         );
-
-        payable(_marketOwner).transfer(listingNFTFee);
+        _NftIDtoMarketNftItem[marketNftId].sold = true;
 
         emit NftItemEvent(
             marketNftId,
@@ -438,6 +464,7 @@ contract Marketplace is ReentrancyGuard {
             payable(address(0)),
             msg.sender,
             price,
+            _currency,
             false
         );
     }
@@ -446,18 +473,35 @@ contract Marketplace is ReentrancyGuard {
         address ERC1155ContractAddress,
         uint256 market1155Id,
         uint256 _amount,
+        bytes32 _currency,
         bytes memory data
     ) public payable nonReentrant {
-        uint256 priceTemp = _1155IDtoMarketNftItem[market1155Id].priceEachItem;
+        uint256 price = _1155IDtoMarketNftItem[market1155Id].priceEachItem;
         uint256 tokenId = _1155IDtoMarketNftItem[market1155Id].tokenId;
         uint256 amountTemp = _1155IDtoMarketNftItem[market1155Id].amount;
         address payable seller = _1155IDtoMarketNftItem[market1155Id].seller;
+        uint256 totalAmtTemp = price * _amount;
+        bool sentSeller;
+        bool sentMarketOwner;
         require(_amount <= amountTemp, "More than ERC1155 amount");
+        if(_currency == "ETH") {
         require(
-            msg.value == priceTemp * _amount,
+            msg.value == totalAmtTemp,
             "Please submit the asking price in order to continue"
         );
-        seller.transfer(msg.value);
+        sentSeller = seller.send(msg.value * (1000 - commission1155)/1000);
+        sentMarketOwner = payable(_marketOwner).send(msg.value * commission1155 / 1000 - 10); // minus 10 wei for safeMath
+
+        } else {
+            require(
+            currency[_currency] != address(0x0),
+            "No Currency Support Yet"
+        );
+            IERC20(currency[_currency]).transferFrom(msg.sender, address(this) , totalAmtTemp);
+            sentSeller = IERC20(currency[_currency]).transfer(seller, totalAmtTemp * (1000 - commission1155)/1000);
+            sentMarketOwner = IERC20(currency[_currency]).transfer(_marketOwner, totalAmtTemp * commission1155/1000 - 10); // minus 10 wei for safeMath
+        }
+        require(sentSeller && sentMarketOwner, "Cannot transfer fee to Seller & MarketOwner");
         IERC1155(ERC1155ContractAddress).safeTransferFrom(
             address(this),
             msg.sender,
@@ -467,8 +511,12 @@ contract Marketplace is ReentrancyGuard {
         );
 
         amountTemp -= _amount;
-        payable(_marketOwner).transfer(listing1155Fee * _amount);
 
+        if (amountTemp > 0) {
+             _1155IDtoMarketNftItem[market1155Id].soldOut = false;
+        } else {
+             _1155IDtoMarketNftItem[market1155Id].soldOut = true;
+        }
         emit ERC1155ItemEvent(
             market1155Id,
             ERC1155ContractAddress,
@@ -476,7 +524,8 @@ contract Marketplace is ReentrancyGuard {
             _amount,
             payable(address(0)),
             payable(msg.sender),
-            priceTemp,
+            price,
+            _currency,
             false
         );
     }
