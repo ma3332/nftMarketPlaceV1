@@ -10,10 +10,11 @@ import "./ERC1155.sol";
 import "./IERC20.sol";
 
 contract Marketplace is ReentrancyGuard {
-    // currency in bytes
+    // currency in bytes (CAPITAL)
     // ETH: 0x4554480000000000000000000000000000000000000000000000000000000000
     // USDT: 0x5553445400000000000000000000000000000000000000000000000000000000
     // USDC: 0x5553444300000000000000000000000000000000000000000000000000000000
+    // FIAT: 0x4649415400000000000000000000000000000000000000000000000000000000
 
     using Counters for Counters.Counter;
 
@@ -474,6 +475,32 @@ contract Marketplace is ReentrancyGuard {
      * marketplace to the msg.sender. It also sends the commission to the marketplace owner.
      */
 
+    function purchaseNftFiat(
+        address nftContractAddress,
+        address _buyer,
+        uint256 marketNftId
+    ) public payable nonReentrant onlyOwner {
+        MarketNftItem memory temp = _NftIDtoMarketNftItem[marketNftId];
+        require(temp.currency == "FIAT", "not correct currency");
+        IERC721(nftContractAddress).transferFrom(
+            address(this),
+            _buyer,
+            temp.tokenId
+        );
+        _NftIDtoMarketNftItem[marketNftId].sold = true;
+
+        emit NftItemEvent(
+            marketNftId,
+            nftContractAddress,
+            temp.tokenId,
+            payable(address(0)),
+            _buyer,
+            temp.price,
+            "FIAT",
+            false
+        );
+    }
+
     function purchaseNft(
         address nftContractAddress,
         uint256 marketNftId,
@@ -535,8 +562,46 @@ contract Marketplace is ReentrancyGuard {
         );
     }
 
+    function purchase1155Fiat(
+        address _ERC1155ContractAddress,
+        address _buyer,
+        uint256 market1155Id,
+        uint256 _amount,
+        bytes memory data
+    ) public nonReentrant onlyOwner {
+        Market1155Item memory temp = _1155IDtoMarketNftItem[market1155Id];
+        uint256 amountTemp = _1155IDtoMarketNftItem[market1155Id].amount;
+        IERC1155(_ERC1155ContractAddress).safeTransferFrom(
+            address(this),
+            _buyer,
+            temp.tokenId,
+            _amount,
+            data
+        );
+
+        amountTemp -= _amount;
+
+        if (amountTemp > 0) {
+            _1155IDtoMarketNftItem[market1155Id].soldOut = false;
+        } else {
+            _1155IDtoMarketNftItem[market1155Id].soldOut = true;
+        }
+
+        emit ERC1155ItemEvent(
+            market1155Id,
+            _ERC1155ContractAddress,
+            temp.tokenId,
+            _amount,
+            payable(address(0)),
+            _buyer,
+            temp.priceEachItem,
+            temp.currency,
+            false
+        );
+    }
+
     function purchase1155(
-        address ERC1155ContractAddress,
+        address _ERC1155ContractAddress,
         uint256 market1155Id,
         uint256 _amount,
         bytes32 _currency,
@@ -584,7 +649,7 @@ contract Marketplace is ReentrancyGuard {
             sentSeller && sentMarketOwner,
             "Cannot transfer fee to Seller & MarketOwner"
         );
-        IERC1155(ERC1155ContractAddress).safeTransferFrom(
+        IERC1155(_ERC1155ContractAddress).safeTransferFrom(
             address(this),
             msg.sender,
             tokenId,
@@ -601,7 +666,7 @@ contract Marketplace is ReentrancyGuard {
         }
         emit ERC1155ItemEvent(
             market1155Id,
-            ERC1155ContractAddress,
+            _ERC1155ContractAddress,
             tokenId,
             _amount,
             payable(address(0)),
