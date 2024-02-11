@@ -71,3 +71,7 @@ Làm tương tự từ bước 2 đến bước 8 trở đi với các smart con
 - DB của 1155 khác với DB của NFT
 
 # Task 2: Xây dựng luồng cho NFT MarketPlace
+1. Tham khảo DB ở file flowDBExample.js
+2. Tham khảo luồng trong https://app.diagrams.net/#G15WtVL8gwtodIODdIlUdb1JdqZ8zlKWlj
+3. Phiên bản mobile tập trung cho việc mua bán
+4. Phiên bản web tập trung cho việc tạo nft/ 1155
