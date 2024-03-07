@@ -63,8 +63,8 @@ nonce = w3.eth.get_transaction_count(my_address)
 
 # 1. Generate a transaction to deploys the contract on the blockchain
 
-ProxyAdminAddress = ""
-MarketPlace = ""
+ProxyAdminAddress = "0x6Ad9C87e36C3d1C1364d1E359d720D0505e3e89a"
+MarketPlace = "0x91f51C16ADED4370f2540c63CCED12f40a36FdE1"
 data = "0x"
 
 transaction = transparentUpgradeableProxy_contract.constructor(
