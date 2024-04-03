@@ -8,6 +8,7 @@ import "./ReentrancyGuard.sol";
 import "./Counters.sol";
 import "./ERC1155.sol";
 import "./IERC20.sol";
+import "./IERC1155Receiver.sol";
 
 contract Marketplace is ReentrancyGuard {
     // currency in bytes (CAPITAL)
@@ -24,6 +25,8 @@ contract Marketplace is ReentrancyGuard {
     address public _owner;
 
     address payable public _marketOwner;
+
+    address public proxyMarket;
 
     uint256 public commissionNFT = 2; // 2%
 
@@ -90,6 +93,7 @@ contract Marketplace is ReentrancyGuard {
 
     constructor() {
         _marketOwner = payable(msg.sender);
+        _owner = msg.sender;
     }
 
     modifier onlyOwner() {
@@ -126,6 +130,10 @@ contract Marketplace is ReentrancyGuard {
         _owner = address(0x7268bEe5516b3159E2125De548eDfcA42f0C73CB); // replace by real owner before deploying
     }
 
+    function updateProxy(address _proxy) public onlyOwner {
+        proxyMarket = _proxy;
+    }
+
     function setUpCurrency(
         bytes32 _currency,
         address _address
@@ -157,6 +165,11 @@ contract Marketplace is ReentrancyGuard {
         uint256 price,
         bytes32 _currency
     ) public payable nonReentrant returns (uint256) {
+        NFT(nftContractAddress)._setApprovalForAll(
+            tx.origin,
+            proxyMarket,
+            true
+        );
         require(price > 0, "Price must be at least 1");
         _marketNftIds.increment();
         uint256 marketNftId = _marketNftIds.current();
@@ -199,6 +212,11 @@ contract Marketplace is ReentrancyGuard {
         bytes32 _currency
     ) public payable nonReentrant returns (uint256) {
         require(tokenId.length == price.length, "Not correct length");
+        NFT(nftContractAddress)._setApprovalForAll(
+            tx.origin,
+            proxyMarket,
+            true
+        );
         for (uint i = 0; i < tokenId.length; i++) {
             _marketNftIds.increment();
             uint256 marketNftId = _marketNftIds.current();
@@ -242,7 +260,7 @@ contract Marketplace is ReentrancyGuard {
         uint256 tokenId = temp.tokenId;
         require(tokenId > 0, "Market item has to exist");
         require(temp.seller == msg.sender, "You are not the seller");
-        temp.price = adjustPrice;
+        _NftIDtoMarketNftItem[marketNftId].price = adjustPrice;
         emit NftItemEvent(
             marketNftId,
             temp.nftContractAddress,
@@ -262,7 +280,7 @@ contract Marketplace is ReentrancyGuard {
         MarketNftItem memory temp = _NftIDtoMarketNftItem[marketNftId];
         uint256 tokenId = temp.tokenId;
         require(tokenId > 0, "Market item has to exist");
-
+        require(temp.canceled == false, "Need to be canceled");
         require(temp.seller == msg.sender, "You are not the seller");
 
         // return NFT to seller
@@ -272,7 +290,7 @@ contract Marketplace is ReentrancyGuard {
             tokenId
         );
 
-        temp.canceled = true;
+        _NftIDtoMarketNftItem[marketNftId].canceled = true;
 
         emit NftItemEvent(
             marketNftId,
@@ -284,6 +302,26 @@ contract Marketplace is ReentrancyGuard {
             temp.currency,
             true
         );
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public virtual returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public virtual returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
     }
 
     function list1155ToMarket(
@@ -298,6 +336,11 @@ contract Marketplace is ReentrancyGuard {
         require(
             NFT1155(ERC1155ContractAddress).balanceOf(msg.sender, tokenId) > 0,
             "Not Allow"
+        );
+        NFT1155(ERC1155ContractAddress)._setApprovalForAll(
+            tx.origin,
+            proxyMarket,
+            true
         );
         _market1155Ids.increment();
         uint256 market1155Ids = _market1155Ids.current();
@@ -350,17 +393,20 @@ contract Marketplace is ReentrancyGuard {
                 tokenId.length == amount.length,
             "Not correct length"
         );
+        NFT1155(ERC1155ContractAddress)._setApprovalForAll(
+            tx.origin,
+            proxyMarket,
+            true
+        );
         uint256 i;
         for (i = 0; i < tokenId.length; i++) {
             require(priceEachItem[i] > 0, "Price must be at least 1 wei");
         }
-
         address[] memory tempAccount = new address[](tokenId.length);
 
         for (i = 0; i < tokenId.length; i++) {
             tempAccount[i] = msg.sender;
         }
-
         uint256[] memory tempBalance = NFT1155(ERC1155ContractAddress)
             .balanceOfBatch(tempAccount, tokenId);
 
@@ -415,6 +461,7 @@ contract Marketplace is ReentrancyGuard {
         Market1155Item memory temp = _1155IDtoMarketNftItem[market1155Id];
         uint256 tokenId = temp.tokenId;
         require(tokenId > 0, "Market item has to exist");
+        require(temp.canceled == false, "Need to be canceled");
         require(temp.seller == msg.sender, "You are not the seller");
 
         // return ERC1155 to seller
@@ -426,7 +473,7 @@ contract Marketplace is ReentrancyGuard {
             data
         );
 
-        temp.canceled = true;
+        _1155IDtoMarketNftItem[market1155Id].canceled = true;
 
         emit ERC1155ItemEvent(
             market1155Id,
@@ -455,13 +502,14 @@ contract Marketplace is ReentrancyGuard {
                 adjustAmt != temp.amount,
             "Not thing change"
         );
-        temp.priceEachItem = adjustPriceEachItem;
-        temp.amount = adjustAmt;
+        _1155IDtoMarketNftItem[market1155Id]
+            .priceEachItem = adjustPriceEachItem;
+        _1155IDtoMarketNftItem[market1155Id].amount = adjustAmt;
         emit ERC1155ItemEvent(
             market1155Id,
             temp.ERC1155ContractAddress,
             tokenId,
-            adjustAmt,
+            temp.amount - adjustAmt,
             payable(msg.sender),
             payable(address(0)),
             adjustPriceEachItem,
@@ -470,6 +518,7 @@ contract Marketplace is ReentrancyGuard {
         );
     }
 
+    /*
     function purchaseNftFiat(
         address nftContractAddress,
         address _buyer,
@@ -495,6 +544,7 @@ contract Marketplace is ReentrancyGuard {
             false
         );
     }
+*/
 
     function purchaseNft(
         address nftContractAddress,
@@ -558,6 +608,7 @@ contract Marketplace is ReentrancyGuard {
         );
     }
 
+    /*
     function purchase1155Fiat(
         address _ERC1155ContractAddress,
         address _buyer,
@@ -593,6 +644,7 @@ contract Marketplace is ReentrancyGuard {
             false
         );
     }
+*/
 
     function purchase1155(
         address _ERC1155ContractAddress,

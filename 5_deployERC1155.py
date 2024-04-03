@@ -59,10 +59,10 @@ nonce = w3.eth.get_transaction_count(my_address)
 # 1. Generate a transaction to deploys the contract on the blockchain
 
 uri = "https://fidec.io/abcxyz"
-marketPlace_proxy = "0x38A5c2bb204A96a284b77157Ace6C16c85A35b42"  # remember this is proxy of market place, not market place
+marketPlace_proxy = ""  # remember this is proxy of market place, not market place
 
 transaction = nft_contract.constructor(
-    uri, "Test", "T1", marketPlace_proxy
+    uri, "Test", "T1"
 ).build_transaction(
     {
         "chainId": chain_id,

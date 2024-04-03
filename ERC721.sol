@@ -493,7 +493,7 @@ abstract contract ERC721 is
         address owner,
         address operator,
         bool approved
-    ) internal virtual {
+    ) public virtual {
         if (operator == address(0)) {
             revert ERC721InvalidOperator(operator);
         }

@@ -442,7 +442,7 @@ abstract contract ERC1155 is
         address owner,
         address operator,
         bool approved
-    ) internal virtual {
+    ) public virtual {
         if (operator == address(0)) {
             revert ERC1155InvalidOperator(address(0));
         }

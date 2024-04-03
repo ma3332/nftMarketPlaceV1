@@ -50,12 +50,12 @@ const listingTxUnsigned =
   await contract_proxy.populateTransaction.listNftToMarket(
     NFT_address,
     1,
-    ethers.utils.parseEther("100000"),
+    ethers.utils.parseEther("100000"), // 100,000 VND
     "0x4649415400000000000000000000000000000000000000000000000000000000" // Fiat
   );
 listingTxUnsigned.chainId = 1337; // chainId 1337 for Ganache UI
 listingTxUnsigned.gasLimit = 2100000;
-listingTxUnsigned.value = ethers.utils.parseEther("0.045");
+listingTxUnsigned.value = ethers.utils.parseEther("0");
 listingTxUnsigned.gasPrice = await provider.getGasPrice();
 listingTxUnsigned.nonce = await provider.getTransactionCount(wallet.address);
 const listingTxSigned = await wallet.signTransaction(listingTxUnsigned);

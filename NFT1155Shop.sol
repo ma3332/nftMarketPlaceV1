@@ -59,7 +59,10 @@ contract NFT1155 is ERC1155, Ownable {
         return _tokenIds.current();
     }
 
-    function mint1155Token(uint256 amtToken, bytes memory data) public {
+    function mint1155Token(
+        uint256 amtToken,
+        bytes memory data
+    ) public onlyOwner {
         _tokenIds.increment();
         uint256 id = _tokenIds.current();
         string memory tokenURI = uri(id);
@@ -70,7 +73,7 @@ contract NFT1155 is ERC1155, Ownable {
     function mint1155BatchToken(
         uint256[] memory amtTokens,
         bytes memory data
-    ) public {
+    ) public onlyOwner {
         uint256[] memory ids = new uint256[](amtTokens.length);
         for (uint i = 0; i < amtTokens.length; i++) {
             _tokenIds.increment();
@@ -83,7 +86,7 @@ contract NFT1155 is ERC1155, Ownable {
         _mintBatch(msg.sender, ids, amtTokens, data);
     }
 
-    function burn1155Token(uint256 id, uint256 amtToken) public {
+    function burn1155Token(uint256 id, uint256 amtToken) public onlyOwner {
         _burn(msg.sender, id, amtToken);
     }
 

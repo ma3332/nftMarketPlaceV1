@@ -242,7 +242,7 @@ contract MarketplaceV2 is ReentrancyGuard {
         uint256 tokenId = temp.tokenId;
         require(tokenId > 0, "Market item has to exist");
         require(temp.seller == msg.sender, "You are not the seller");
-        temp.price = adjustPrice;
+        _NftIDtoMarketNftItem[marketNftId].price = adjustPrice;
         emit NftItemEvent(
             marketNftId,
             temp.nftContractAddress,
@@ -262,7 +262,7 @@ contract MarketplaceV2 is ReentrancyGuard {
         MarketNftItem memory temp = _NftIDtoMarketNftItem[marketNftId];
         uint256 tokenId = temp.tokenId;
         require(tokenId > 0, "Market item has to exist");
-
+        require(temp.canceled == false, "Need to be canceled");
         require(temp.seller == msg.sender, "You are not the seller");
 
         // return NFT to seller
@@ -272,7 +272,7 @@ contract MarketplaceV2 is ReentrancyGuard {
             tokenId
         );
 
-        temp.canceled = true;
+        _NftIDtoMarketNftItem[marketNftId].canceled = true;
 
         emit NftItemEvent(
             marketNftId,
@@ -415,6 +415,7 @@ contract MarketplaceV2 is ReentrancyGuard {
         Market1155Item memory temp = _1155IDtoMarketNftItem[market1155Id];
         uint256 tokenId = temp.tokenId;
         require(tokenId > 0, "Market item has to exist");
+        require(temp.canceled == false, "Need to be canceled");
         require(temp.seller == msg.sender, "You are not the seller");
 
         // return ERC1155 to seller
@@ -426,7 +427,7 @@ contract MarketplaceV2 is ReentrancyGuard {
             data
         );
 
-        temp.canceled = true;
+        _1155IDtoMarketNftItem[market1155Id].canceled = true;
 
         emit ERC1155ItemEvent(
             market1155Id,
@@ -455,13 +456,14 @@ contract MarketplaceV2 is ReentrancyGuard {
                 adjustAmt != temp.amount,
             "Not thing change"
         );
-        temp.priceEachItem = adjustPriceEachItem;
-        temp.amount = adjustAmt;
+        _1155IDtoMarketNftItem[market1155Id]
+            .priceEachItem = adjustPriceEachItem;
+        _1155IDtoMarketNftItem[market1155Id].amount = adjustAmt;
         emit ERC1155ItemEvent(
             market1155Id,
             temp.ERC1155ContractAddress,
             tokenId,
-            adjustAmt,
+            temp.amount - adjustAmt,
             payable(msg.sender),
             payable(address(0)),
             adjustPriceEachItem,
