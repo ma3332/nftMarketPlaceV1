@@ -8,15 +8,13 @@ load_dotenv()
 
 install_solc("0.8.17")
 
-TransparentUpgradeableProxy = open("TransparentUpgradeableProxy.sol", "r").read()
+Test = open("Test.sol", "r").read()
 
 # Compile solidity code
-compiled_TransparentUpgradeableProxy_sol = compile_standard(
+compiled_test_sol = compile_standard(
     {
         "language": "Solidity",
-        "sources": {
-            "TransparentUpgradeableProxy.sol": {"content": TransparentUpgradeableProxy}
-        },
+        "sources": {"Test.sol": {"content": Test}},
         "settings": {
             "outputSelection": {
                 "*": {
@@ -29,18 +27,14 @@ compiled_TransparentUpgradeableProxy_sol = compile_standard(
 )
 
 # JSON file
-with open("compiled_TransparentUpgradeableProxy.json", "w") as file:
-    json.dump(compiled_TransparentUpgradeableProxy_sol, file)
+with open("compiled_test.json", "w") as file:
+    json.dump(compiled_test_sol, file)
 
 # get bytecode from the evm (can be found from the compiled_code.json)
-bytecode = compiled_TransparentUpgradeableProxy_sol["contracts"][
-    "TransparentUpgradeableProxy.sol"
-]["TransparentUpgradeableProxy"]["evm"]["bytecode"]["object"]
+bytecode = compiled_test_sol["contracts"]["Test.sol"]["Test"]["evm"]["bytecode"]["object"]
 
 # get abi (can be found from the compiled_code.json)
-abi = compiled_TransparentUpgradeableProxy_sol["contracts"][
-    "TransparentUpgradeableProxy.sol"
-]["TransparentUpgradeableProxy"]["abi"]
+abi = compiled_test_sol["contracts"]["Test.sol"]["Test"]["abi"]
 
 # For connecting to ganache
 w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:7545"))
@@ -49,9 +43,8 @@ chain_id = 1337
 my_address = os.getenv("ADDRESS")
 private_key = os.getenv("PRIVATE_KEY")
 
-
 # Create the contract in Python, which is based on the abi and bytecode of Test.Sol file
-transparentUpgradeableProxy_contract = w3.eth.contract(abi=abi, bytecode=bytecode)
+test_contract = w3.eth.contract(abi=abi, bytecode=bytecode)
 
 # Get the number of the latest transaction that a particular address has made (here this nonce is different from the nonce of POW)
 nonce = w3.eth.get_transaction_count(my_address)
@@ -63,13 +56,9 @@ nonce = w3.eth.get_transaction_count(my_address)
 
 # 1. Generate a transaction to deploys the contract on the blockchain
 
-ProxyAdminAddress = "0x8dCBddD8d68FF6B1da634141D64b2cA74146F34B"
-MarketPlace = "0xd7e82B23071F60b06026BCC7569d14Ed1C82c60D"
-data = "0x"
+marketPlace_proxy = ""  # remember this is proxy of market place, not market place
 
-transaction = transparentUpgradeableProxy_contract.constructor(
-    MarketPlace, ProxyAdminAddress, data
-).build_transaction(
+transaction = test_contract.constructor().build_transaction(
     {
         "chainId": chain_id,
         "gasPrice": w3.eth.gas_price,
@@ -89,6 +78,4 @@ tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
 # Wait for the transaction to be mined, and get the transaction receipt (hashed of transaction ID)
 print("Waiting for transaction to finish...")
 tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-print(
-    f"Done! TransparentUpgradeableProxy Contract deployed to {tx_receipt.contractAddress}"
-)
+print(f"Done! Test Contract deployed to {tx_receipt.contractAddress}")

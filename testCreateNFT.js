@@ -21,27 +21,35 @@ const wallet2 = new ethers.Wallet(
   provider
 );
 
-// NFT Contract
-const NFT_address = "0x80218FCbef5ca5A03BC46407c19f9F9288396cBf";
-const contract_NFT = new ethers.Contract(
-  NFT_address,
-  NFT["contracts"]["NFT.sol"]["NFT"]["abi"],
+// Proxy Admin Contract
+const proxy_admin_address = "0x8dCBddD8d68FF6B1da634141D64b2cA74146F34B";
+const contract_proxy_admin = new ethers.Contract(
+  proxy_admin_address,
+  proxyAdmin["contracts"]["ProxyAdmin.sol"]["ProxyAdmin"]["abi"],
+  provider
+);
+
+// MarketPlace Contract
+const address_market = "0xE8303C3C80ABB33414Dd843A9a3531ecB23C6318";
+const contract_market = new ethers.Contract(
+  address_market,
+  marketPlaceV1["contracts"]["Marketplace.sol"]["Marketplace"]["abi"],
   provider
 );
 
 // Proxy MarketPlace
-const proxy_address = "0x38A5c2bb204A96a284b77157Ace6C16c85A35b42";
+const proxy_address = "0xf5B99eDBE9F7382770D659454E1aac12F303e8E3";
 const contract_proxy = new ethers.Contract(
   proxy_address,
   marketPlaceV1["contracts"]["Marketplace.sol"]["Marketplace"]["abi"],
   provider
 );
 
-// Proxy Admin Contract
-const proxy_admin_address = "0x6Ad9C87e36C3d1C1364d1E359d720D0505e3e89a";
-const contract_proxy_admin = new ethers.Contract(
-  proxy_admin_address,
-  proxyAdmin["contracts"]["ProxyAdmin.sol"]["ProxyAdmin"]["abi"],
+// NFT Contract
+const NFT_address = "0x1090B435c89C6752DC971b2Fa7Be3cA0D2bD3fe6";
+const contract_NFT = new ethers.Contract(
+  NFT_address,
+  NFT["contracts"]["NFT.sol"]["NFT"]["abi"],
   provider
 );
 
@@ -60,7 +68,6 @@ const nftTxSigned = await wallet.signTransaction(nftTxUnsigned);
 const submittednftTx = await provider.sendTransaction(nftTxSigned);
 console.log(submittednftTx);
 
-
 // // Proxy Admin Set Up & upgradeToNewVersion
 // // const proxySetUpTxUnsigned =
 // //   await contract_proxy_admin.populateTransaction.setUpProxy(proxy_address);
@@ -74,11 +81,3 @@ console.log(submittednftTx);
 // const submittednftTx = await provider.sendTransaction(proxySetUpTxSigned);
 // console.log(submittednftTx);
 
-// const contract_proxy_v2 = new ethers.Contract(
-//   proxy_address,
-//   marketPlaceV2["contracts"]["MarketplaceV2.sol"]["MarketplaceV2"]["abi"],
-//   provider
-// );
-
-// const testV2res = await contract_proxy_v2.testForFun();
-// console.log(testV2res);

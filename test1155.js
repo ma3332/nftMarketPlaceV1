@@ -4,6 +4,7 @@ import TransparentProxy from "./compiled_TransparentUpgradeableProxy.json" asser
 import ERC1155 from "./compiled_NFT1155.json" assert { type: "json" };
 import Proxy from "./compiled_TransparentUpgradeableProxy.json" assert { type: "json" };
 import proxyAdmin from "./compiled_ProxyAdmin.json" assert { type: "json" };
+import erc20 from "./compiled_ERC20Sample.json" assert { type: "json" };
 import { BigNumber } from "@ethersproject/bignumber";
 import { ethers } from "ethers";
 import * as fs from "fs";
@@ -13,13 +14,11 @@ dotenv.config();
 
 const provider = new ethers.providers.JsonRpcProvider("HTTP://127.0.0.1:7545"); // Ganache UI;
 
-const privateKey = process.env.PRIVATE_KEY;
+const privateKey_1 = process.env.PRIVATE_KEY;
+const privateKey_2 = process.env.PRIVATE_KEY_2;
 
-const wallet = new ethers.Wallet(privateKey, provider);
-const wallet2 = new ethers.Wallet(
-  "0x7bd26eba66d5f68098164d199e2b6806881fdb5dcf39d3ec4bee6694c3471dff",
-  provider
-);
+const wallet = new ethers.Wallet(privateKey_1, provider);
+const wallet2 = new ethers.Wallet(privateKey_2, provider);
 
 // Proxy Admin Contract
 const proxy_admin_address = "0x8dCBddD8d68FF6B1da634141D64b2cA74146F34B";
@@ -30,7 +29,7 @@ const contract_proxy_admin = new ethers.Contract(
 );
 
 // MarketPlace Contract
-const address_market = "0x099401ca4937920E7BbAcF1037A67E879296984f";
+const address_market = "0xd7e82B23071F60b06026BCC7569d14Ed1C82c60D";
 const contract_market = new ethers.Contract(
   address_market,
   marketPlaceV1["contracts"]["Marketplace.sol"]["Marketplace"]["abi"],
@@ -38,7 +37,7 @@ const contract_market = new ethers.Contract(
 );
 
 // Proxy MarketPlace
-const proxy_address = "0x77A78eC330B5604d82C352929656A84c5E50aBd9";
+const proxy_address = "0x1c11bdEb542EA4990212d72fA5B6CE3b85963d4e";
 const contract_proxy = new ethers.Contract(
   proxy_address,
   marketPlaceV1["contracts"]["Marketplace.sol"]["Marketplace"]["abi"],
@@ -50,6 +49,14 @@ const ERC1155_address = "0x0Be56947f7bD953425B88290F8e363d7a62cf55a";
 const contract_ERC1155 = new ethers.Contract(
   ERC1155_address,
   ERC1155["contracts"]["NFT1155.sol"]["NFT1155"]["abi"],
+  provider
+);
+
+// ERC20 Contract
+const erc20_address = "0x9854cB2099286B88cFB9B8A8E6807457c49b1dF5";
+const contract_erc20 = new ethers.Contract(
+  erc20_address,
+  erc20["contracts"]["ERC20Sample.sol"]["ERC20Sample"]["abi"],
   provider
 );
 
@@ -70,6 +77,7 @@ const contract_ERC1155 = new ethers.Contract(
 
 // const testRes = await contract_ERC1155.viewCurrentTokenID();
 // console.log(testRes);
+
 // const balanceRes = await contract_ERC1155.balanceOf(process.env.ADDRESS, 1);
 // console.log(balanceRes);
 
@@ -96,24 +104,24 @@ const contract_ERC1155 = new ethers.Contract(
 // const submittedTx = await provider.sendTransaction(setProxyTxSigned);
 // console.log(submittedTx);
 
-// ------ MarketPlace V1 list 1155 test -------
-const listingTxUnsigned =
-  await contract_proxy.populateTransaction.list1155ToMarket(
-    ERC1155_address,
-    1,
-    10,
-    ethers.utils.parseEther("0.1"),
-    "0x4554480000000000000000000000000000000000000000000000000000000000", // ETH
-    "0x" // data
-  );
-listingTxUnsigned.chainId = 1337; // chainId 1337 for Ganache UI
-listingTxUnsigned.gasLimit = 2100000;
-listingTxUnsigned.value = 0;
-listingTxUnsigned.gasPrice = await provider.getGasPrice();
-listingTxUnsigned.nonce = await provider.getTransactionCount(wallet.address);
-const listingTxSigned = await wallet.signTransaction(listingTxUnsigned);
-const submittedlistingTx = await provider.sendTransaction(listingTxSigned);
-console.log(submittedlistingTx);
+// // ------ MarketPlace V1 list 1155 with ETH -------
+// const listingTxUnsigned =
+//   await contract_proxy.populateTransaction.list1155ToMarket(
+//     ERC1155_address,
+//     1,
+//     10,
+//     ethers.utils.parseEther("0.1"),
+//     "0x4554480000000000000000000000000000000000000000000000000000000000", // ETH
+//     "0x" // data
+//   );
+// listingTxUnsigned.chainId = 1337; // chainId 1337 for Ganache UI
+// listingTxUnsigned.gasLimit = 2100000;
+// listingTxUnsigned.value = 0;
+// listingTxUnsigned.gasPrice = await provider.getGasPrice();
+// listingTxUnsigned.nonce = await provider.getTransactionCount(wallet.address);
+// const listingTxSigned = await wallet.signTransaction(listingTxUnsigned);
+// const submittedlistingTx = await provider.sendTransaction(listingTxSigned);
+// console.log(submittedlistingTx);
 
 // // ----------- MarketPlace V1 list batch 1155 test --------------
 // const listTokenId = [2, 3];
@@ -139,3 +147,57 @@ console.log(submittedlistingTx);
 // const listingTxSigned = await wallet.signTransaction(listingTxUnsigned);
 // const submittedlistingTx = await provider.sendTransaction(listingTxSigned);
 // console.log(submittedlistingTx);
+
+
+// // ------ MarketPlace V1 list 1155 with ERC20 -------
+// const listingTxUnsigned =
+//   await contract_proxy.populateTransaction.list1155ToMarket(
+//     ERC1155_address,
+//     7,
+//     100,
+//     ethers.utils.parseEther("100"),
+//     "0x4552433230000000000000000000000000000000000000000000000000000000", // ERC20
+//     "0x" // data
+//   );
+// listingTxUnsigned.chainId = 1337; // chainId 1337 for Ganache UI
+// listingTxUnsigned.gasLimit = 2100000;
+// listingTxUnsigned.value = 0;
+// listingTxUnsigned.gasPrice = await provider.getGasPrice();
+// listingTxUnsigned.nonce = await provider.getTransactionCount(wallet.address);
+// const listingTxSigned = await wallet.signTransaction(listingTxUnsigned);
+// const submittedlistingTx = await provider.sendTransaction(listingTxSigned);
+// console.log(submittedlistingTx);
+
+// console.log(await contract_proxy._1155IDtoMarketNftItem(3))
+
+// // ------ MarketPlace V1 buy 1155 with ERC20 -------
+// const approveERC20Unsigned = await contract_erc20.populateTransaction.approve(
+//   contract_proxy.address,
+//   ethers.utils.parseEther("1000")
+// );
+// approveERC20Unsigned.chainId = 1337; // chainId 1337 for Ganache UI
+// approveERC20Unsigned.gasLimit = 2100000;
+// approveERC20Unsigned.value = ethers.utils.parseEther("0");
+// approveERC20Unsigned.gasPrice = await provider.getGasPrice();
+// approveERC20Unsigned.nonce = await provider.getTransactionCount(
+//   wallet2.address
+// );
+// const approveERC20Signed = await wallet2.signTransaction(approveERC20Unsigned);
+// provider.sendTransaction(approveERC20Signed);
+
+const buy1155Unsigned =
+  await contract_proxy.populateTransaction.purchase1155(
+    ERC1155_address,
+    3,
+    10,
+    "0x4552433230000000000000000000000000000000000000000000000000000000", // ERC20
+    "0x" // data
+  );
+buy1155Unsigned.chainId = 1337; // chainId 1337 for Ganache UI
+buy1155Unsigned.gasLimit = 2100000;
+buy1155Unsigned.value = 0;
+buy1155Unsigned.gasPrice = await provider.getGasPrice();
+buy1155Unsigned.nonce = await provider.getTransactionCount(wallet2.address);
+const buy1155Signed = await wallet2.signTransaction(buy1155Unsigned);
+const submittedlistingTx = await provider.sendTransaction(buy1155Signed);
+console.log(submittedlistingTx);
