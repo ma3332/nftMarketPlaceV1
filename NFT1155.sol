@@ -78,7 +78,6 @@ contract NFT1155 is ERC1155, Ownable {
             ids[i] = newItemId;
             string memory tokenURI = uri(newItemId);
             _setTokenURI(newItemId, tokenURI);
-            _tokenIds.increment();
         }
         _mintBatch(msg.sender, ids, amtTokens, data);
     }
