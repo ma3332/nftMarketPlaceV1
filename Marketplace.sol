@@ -593,9 +593,8 @@ contract Marketplace is ReentrancyGuard {
         bytes memory data
     ) public payable nonReentrant {
         Market1155Item memory temp = _1155IDtoMarketNftItem[market1155Id];
-        uint256 amountTemp = _1155IDtoMarketNftItem[market1155Id].amount;
         bool sentSeller;
-        require(_amount <= amountTemp, "More than ERC1155 amount");
+        require(_amount <= _1155IDtoMarketNftItem[market1155Id].amount, "More than ERC1155 amount");
         if (_currency == "ETH") {
             require(
                 msg.value == temp.priceEachItem * _amount,
@@ -630,9 +629,9 @@ contract Marketplace is ReentrancyGuard {
             data
         );
 
-        amountTemp -= _amount;
+        _1155IDtoMarketNftItem[market1155Id].amount -= _amount;
 
-        if (amountTemp == 0) {
+        if (_1155IDtoMarketNftItem[market1155Id].amount == 0) {
             _1155IDtoMarketNftItem[market1155Id].soldOut = true;
         }
         emit ERC1155ItemEvent(
